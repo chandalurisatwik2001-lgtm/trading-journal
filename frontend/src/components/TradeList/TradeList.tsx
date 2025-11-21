@@ -50,35 +50,39 @@ const TradeList: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this trade?')) {
+  /*
+    const handleDelete = async (id: number) => {
+      if (window.confirm('Are you sure you want to delete this trade?')) {
+        try {
+          await tradesAPI.delete(id);
+          loadData();
+        } catch (error) {
+          console.error('Error deleting trade:', error);
+          alert('Failed to delete trade');
+        }
+      }
+    };
+  */
+
+  /*
+    const handleCloseTrade = async (trade: Trade) => {
+      const exitPrice = prompt(`Enter exit price for ${trade.symbol}:`, trade.entry_price.toString());
+      if (!exitPrice) return;
+  
       try {
-        await tradesAPI.delete(id);
+        await tradesAPI.update(trade.id!, {
+          exit_price: parseFloat(exitPrice),
+          exit_date: new Date().toISOString(),
+          status: 'CLOSED'
+        });
+        alert(`Trade ${trade.symbol} closed successfully!`);
         loadData();
       } catch (error) {
-        console.error('Error deleting trade:', error);
-        alert('Failed to delete trade');
+        console.error('Error closing trade:', error);
+        alert('Failed to close trade');
       }
-    }
-  };
-
-  const handleCloseTrade = async (trade: Trade) => {
-    const exitPrice = prompt(`Enter exit price for ${trade.symbol}:`, trade.entry_price.toString());
-    if (!exitPrice) return;
-
-    try {
-      await tradesAPI.update(trade.id!, {
-        exit_price: parseFloat(exitPrice),
-        exit_date: new Date().toISOString(),
-        status: 'CLOSED'
-      });
-      alert(`Trade ${trade.symbol} closed successfully!`);
-      loadData();
-    } catch (error) {
-      console.error('Error closing trade:', error);
-      alert('Failed to close trade');
-    }
-  };
+    };
+  */
 
   const toggleSelectTrade = (id: number) => {
     setSelectedTrades(prev =>
