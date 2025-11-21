@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
+    "date-fns": "^4.1.0",
+    "recharts": "^3.4.1"
+  }
+}
