@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart2, Calendar, BookOpen, Zap, Shield, Target } from 'lucide-react';
+import { BarChart2, Calendar, BookOpen, Zap, Target } from 'lucide-react';
 
 const BentoGrid = () => {
     return (

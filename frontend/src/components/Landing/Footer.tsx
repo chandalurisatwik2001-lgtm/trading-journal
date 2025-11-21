@@ -10,10 +10,10 @@ const Footer = () => {
                         <span className="font-bold text-xl text-white">TradeZella</span>
                     </div>
                     <div className="flex gap-8 text-sm text-gray-400">
-                        <a href="#" className="hover:text-white transition">Privacy</a>
-                        <a href="#" className="hover:text-white transition">Terms</a>
-                        <a href="#" className="hover:text-white transition">Twitter</a>
-                        <a href="#" className="hover:text-white transition">Discord</a>
+                        <a href="/" className="hover:text-white transition">Privacy</a>
+                        <a href="/" className="hover:text-white transition">Terms</a>
+                        <a href="/" className="hover:text-white transition">Twitter</a>
+                        <a href="/" className="hover:text-white transition">Discord</a>
                     </div>
                     <div className="text-sm text-gray-500">
                         © 2025 TradeZella. All rights reserved.

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import OnboardingLayout from './OnboardingLayout';
 import Step1Experience from './Steps/Step1Experience';
 import Step2Goals from './Steps/Step2Goals';

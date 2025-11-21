@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface Step3BalanceProps {
     balance: string;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { tradesAPI, Trade } from '../../api/trades';
+import { Trade } from '../../api/trades';
 import { format } from 'date-fns';
 
 interface PerformanceMetrics {
