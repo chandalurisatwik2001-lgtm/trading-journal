@@ -7,6 +7,7 @@ export interface ExchangeConnectRequest {
     api_key: string;
     api_secret: string;
     is_testnet: boolean;
+    account_type: string;  // "spot" or "future"
 }
 
 export interface ExchangeStatus {
@@ -14,6 +15,7 @@ export interface ExchangeStatus {
     exchange_name: string;
     is_active: boolean;
     is_testnet: boolean;
+    account_type: string;
     last_synced_at: string | null;
 }
 

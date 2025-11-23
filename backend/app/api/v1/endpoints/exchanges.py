@@ -16,12 +16,14 @@ class ExchangeConnectRequest(BaseModel):
     api_key: str
     api_secret: str
     is_testnet: bool = False
+    account_type: str = "spot"  # "spot" or "future"
 
 class ExchangeStatus(BaseModel):
     id: int
     exchange_name: str
     is_active: bool
     is_testnet: bool
+    account_type: str = "spot"
     last_synced_at: Optional[str]
 
 @router.post("/connect", response_model=ExchangeStatus)
@@ -31,7 +33,7 @@ def connect_exchange(
     current_user: User = Depends(deps.get_current_active_user)
 ):
     # 1. Validate keys with Binance
-    service = BinanceService(data.api_key, data.api_secret, data.is_testnet)
+    service = BinanceService(data.api_key, data.api_secret, data.is_testnet, data.account_type)
     is_valid, error_msg = service.validate_connection()
     if not is_valid:
         raise HTTPException(status_code=400, detail=f"Connection failed: {error_msg}")
@@ -44,9 +46,10 @@ def connect_exchange(
 
     if existing:
         # Update existing
-        existing.api_key = encrypt_string(data.api_key)
-        existing.api_secret = encrypt_string(data.api_secret)
+        existing.api_key_encrypted = encrypt_string(data.api_key)
+        existing.api_secret_encrypted = encrypt_string(data.api_secret)
         existing.is_testnet = data.is_testnet
+        existing.account_type = data.account_type
         existing.is_active = True
         db.commit()
         db.refresh(existing)
@@ -56,9 +59,10 @@ def connect_exchange(
     new_conn = ExchangeConnection(
         user_id=current_user.id,
         exchange_name=data.exchange_name,
-        api_key=encrypt_string(data.api_key),
-        api_secret=encrypt_string(data.api_secret),
-        is_testnet=data.is_testnet
+        api_key_encrypted=encrypt_string(data.api_key),
+        api_secret_encrypted=encrypt_string(data.api_secret),
+        is_testnet=data.is_testnet,
+        account_type=data.account_type
     )
     db.add(new_conn)
     db.commit()
@@ -91,11 +95,12 @@ def sync_trades(
         raise HTTPException(status_code=404, detail="Exchange connection not found")
 
     # Decrypt keys
-    api_key = decrypt_string(conn.api_key)
-    api_secret = decrypt_string(conn.api_secret)
+    api_key = decrypt_string(conn.api_key_encrypted)
+    api_secret = decrypt_string(conn.api_secret_encrypted)
     
     # Fetch trades
-    service = BinanceService(api_key, api_secret, conn.is_testnet)
+    account_type = getattr(conn, 'account_type', 'spot')  # Default to spot for old records
+    service = BinanceService(api_key, api_secret, conn.is_testnet, account_type)
     try:
         # Fetching for major pairs for demo purposes
         # In a real app, we'd iterate known symbols or fetch all orders

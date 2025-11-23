@@ -5,6 +5,7 @@ const ExchangeSettings: React.FC = () => {
     const [apiKey, setApiKey] = useState('');
     const [apiSecret, setApiSecret] = useState('');
     const [isTestnet, setIsTestnet] = useState(true); // Default to true for demo
+    const [accountType, setAccountType] = useState('future'); // Default to future for demo.binance.com
     const [isLoading, setIsLoading] = useState(false);
     const [connections, setConnections] = useState<ExchangeStatus[]>([]);
     const [syncingId, setSyncingId] = useState<number | null>(null);
@@ -30,7 +31,8 @@ const ExchangeSettings: React.FC = () => {
                 exchange_name: 'binance',
                 api_key: apiKey,
                 api_secret: apiSecret,
-                is_testnet: isTestnet
+                is_testnet: isTestnet,
+                account_type: accountType
             });
             setApiKey('');
             setApiSecret('');
@@ -77,6 +79,9 @@ const ExchangeSettings: React.FC = () => {
                                                 Testnet
                                             </span>
                                         )}
+                                        <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
+                                            {conn.account_type || 'spot'}
+                                        </span>
                                     </div>
                                     <p className="text-sm text-gray-500 mt-1">
                                         Last synced: {conn.last_synced_at ? new Date(conn.last_synced_at).toLocaleString() : 'Never'}
@@ -120,6 +125,34 @@ const ExchangeSettings: React.FC = () => {
                         <label htmlFor="testnet" className="text-gray-300 cursor-pointer select-none">
                             Use Testnet (Demo Account)
                         </label>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-3 text-gray-400">Account Type</label>
+                        <div className="flex gap-4">
+                            <label className="flex items-center cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="accountType"
+                                    value="spot"
+                                    checked={accountType === 'spot'}
+                                    onChange={(e) => setAccountType(e.target.value)}
+                                    className="w-4 h-4 text-blue-600 bg-[#2A2A35] border-gray-700 focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-gray-300">Spot</span>
+                            </label>
+                            <label className="flex items-center cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="accountType"
+                                    value="future"
+                                    checked={accountType === 'future'}
+                                    onChange={(e) => setAccountType(e.target.value)}
+                                    className="w-4 h-4 text-blue-600 bg-[#2A2A35] border-gray-700 focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-gray-300">Futures</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div>

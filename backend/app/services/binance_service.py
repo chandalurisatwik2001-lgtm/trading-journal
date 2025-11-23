@@ -3,17 +3,20 @@ from datetime import datetime
 from typing import List, Dict, Any
 
 class BinanceService:
-    def __init__(self, api_key: str, api_secret: str, is_testnet: bool = False):
-        self.api_key = api_key
-        self.api_secret = api_secret
-        self.is_testnet = is_testnet
-        
+    def __init__(self, api_key: str, api_secret: str, is_testnet: bool = False, account_type: str = "spot"):
+        """
+        Initialize Binance service
+        :param api_key: Binance API key
+        :param api_secret: Binance API secret
+        :param is_testnet: Whether to use testnet
+        :param account_type: "spot" or "future"
+        """
         self.client = ccxt.binance({
             'apiKey': api_key,
             'secret': api_secret,
             'enableRateLimit': True,
             'options': {
-                'defaultType': 'spot',
+                'defaultType': account_type,  # 'spot' or 'future'
                 'adjustForTimeDifference': True,  # Crucial for remote servers
             }
         })

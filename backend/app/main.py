@@ -17,6 +17,7 @@ async def lifespan(app: FastAPI):
             conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'manual'"))
             conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS asset_type VARCHAR DEFAULT 'stock'"))
             conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS commission FLOAT DEFAULT 0.0"))
+            conn.execute(text("ALTER TABLE exchange_connections ADD COLUMN IF NOT EXISTS account_type VARCHAR DEFAULT 'spot'"))
             conn.commit()
             print("Schema migration completed successfully")
         except Exception as e:
