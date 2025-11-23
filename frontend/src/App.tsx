@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import TradeEntryForm from './components/TradeEntry/TradeEntryForm';
 import TradeList from './components/TradeList/TradeList';
 import CalendarView from './components/Calendar/CalendarView';
+import ExchangeSettings from './components/Settings/ExchangeSettings';
 import LandingPage from './components/Landing/LandingPage';
 import Sidebar from './components/Layout/Sidebar';
 import TopBar from './components/Layout/TopBar';
@@ -41,6 +42,7 @@ const AppLayout = () => {
               <Route path="/trades" element={<TradeList />} />
               <Route path="/new-trade" element={<TradeEntryForm />} />
               <Route path="/calendar" element={<CalendarView />} />
+              <Route path="/settings/exchanges" element={<ExchangeSettings />} />
               {/* Add other routes as needed */}
             </Routes>
           </div>

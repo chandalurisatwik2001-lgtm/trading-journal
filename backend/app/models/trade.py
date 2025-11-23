@@ -31,6 +31,9 @@ class Trade(Base):
     pnl = Column(Float, nullable=True)
     status = Column(Enum(TradeStatus), nullable=False, default=TradeStatus.OPEN)
     notes = Column(String, nullable=True)
+    asset_type = Column(String, default="stock")
+    commission = Column(Float, default=0.0)
+    source = Column(String, default="manual") # 'manual', 'binance', etc.
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
