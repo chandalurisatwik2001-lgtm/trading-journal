@@ -124,8 +124,8 @@ const Sidebar = () => {
                 {/* User / Settings */}
                 <div className="p-4 border-t border-white/5 space-y-1">
                     <NavItem
-                        item={{ icon: Settings, label: 'Settings', path: '/settings/exchanges' }}
-                        isActive={location.pathname === '/settings/exchanges'}
+                        item={{ icon: Settings, label: 'Settings', path: '/dashboard/settings/exchanges' }}
+                        isActive={location.pathname === '/dashboard/settings/exchanges'}
                         collapsed={collapsed}
                     />
                     <button
