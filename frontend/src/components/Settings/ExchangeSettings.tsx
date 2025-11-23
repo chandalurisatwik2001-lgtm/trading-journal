@@ -36,9 +36,10 @@ const ExchangeSettings: React.FC = () => {
             setApiSecret('');
             await loadConnections();
             alert('Connected successfully!');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Connection failed:', error);
-            alert('Failed to connect. Please check your API keys.');
+            const errorMessage = error.response?.data?.detail || 'Failed to connect. Please check your API keys.';
+            alert(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -85,8 +86,8 @@ const ExchangeSettings: React.FC = () => {
                                     onClick={() => handleSync(conn.id)}
                                     disabled={syncingId === conn.id}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all ${syncingId === conn.id
-                                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                            : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20'
+                                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                        : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20'
                                         }`}
                                 >
                                     {syncingId === conn.id ? 'Syncing...' : 'Sync Now'}
@@ -149,8 +150,8 @@ const ExchangeSettings: React.FC = () => {
                         type="submit"
                         disabled={isLoading}
                         className={`w-full py-3 px-6 rounded-lg font-bold text-white transition-all shadow-lg ${isLoading
-                                ? 'bg-gray-700 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-900/20'
+                            ? 'bg-gray-700 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-900/20'
                             }`}
                     >
                         {isLoading ? 'Connecting...' : 'Connect Exchange'}

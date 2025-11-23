@@ -7,7 +7,39 @@ from app.schemas.user import UserOnboardingUpdate, UserOnboardingResponse
 import json
 
 router = APIRouter()
-
+@router.get("/me/onboarding", response_model=UserOnboardingResponse)
+def get_onboarding(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    onboarding = db.query(UserOnboarding).filter(UserOnboarding.user_id == current_user.id).first()
+    if not onboarding:
+        # Return empty default
+        return {
+            "user_id": current_user.id,
+            "trading_experience": None,
+            "goals": [],
+            "broker": None,
+            "initial_balance": 0.0,
+            "currency": "USD",
+            "trading_assets": []
+        }
+        
+    # Convert back to list for response
+    response_data = onboarding.__dict__.copy()
+    if response_data.get('goals'):
+        try:
+            response_data['goals'] = json.loads(response_data['goals'])
+        except:
+            response_data['goals'] = []
+            
+    if response_data.get('trading_assets'):
+        try:
+            response_data['trading_assets'] = json.loads(response_data['trading_assets'])
+        except:
+            response_data['trading_assets'] = []
+            
+    return response_data
 @router.put("/me/onboarding", response_model=UserOnboardingResponse)
 def update_onboarding(
     onboarding_in: UserOnboardingUpdate,
