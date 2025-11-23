@@ -32,8 +32,9 @@ def connect_exchange(
 ):
     # 1. Validate keys with Binance
     service = BinanceService(data.api_key, data.api_secret, data.is_testnet)
-    if not service.validate_connection():
-        raise HTTPException(status_code=400, detail="Invalid API Key or Secret, or connection failed")
+    is_valid, error_msg = service.validate_connection()
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=f"Connection failed: {error_msg}")
 
     # 2. Check if already exists
     existing = db.query(ExchangeConnection).filter(

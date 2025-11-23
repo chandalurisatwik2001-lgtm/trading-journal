@@ -13,21 +13,23 @@ class BinanceService:
             'secret': api_secret,
             'enableRateLimit': True,
             'options': {
-                'defaultType': 'spot',  # or 'future', 'margin'
+                'defaultType': 'spot',
+                'adjustForTimeDifference': True,  # Crucial for remote servers
             }
         })
         
         if is_testnet:
             self.client.set_sandbox_mode(True)
 
-    def validate_connection(self) -> bool:
+    def validate_connection(self) -> tuple[bool, str]:
         try:
             # Fetch balance to verify keys
             self.client.fetch_balance()
-            return True
+            return True, ""
         except Exception as e:
-            print(f"Connection validation failed: {str(e)}")
-            return False
+            error_msg = str(e)
+            print(f"Connection validation failed: {error_msg}")
+            return False, error_msg
 
     def fetch_trades(self, symbol: str = None, limit: int = 1000) -> List[Dict[str, Any]]:
         try:
