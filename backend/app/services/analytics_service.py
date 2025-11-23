@@ -315,3 +315,68 @@ class AnalyticsService:
             "trading_days": len(daily_data),
             "days": days
         }
+    @staticmethod
+    def get_trade_distribution(db: Session, user_id: int) -> Dict:
+        """Get trade distribution (Long vs Short)"""
+        trades = db.query(Trade).filter(
+            Trade.user_id == user_id,
+            Trade.status == TradeStatus.CLOSED,
+            Trade.pnl.isnot(None)
+        ).all()
+        
+        dist = {
+            "LONG": {"count": 0, "pnl": 0, "wins": 0},
+            "SHORT": {"count": 0, "pnl": 0, "wins": 0}
+        }
+        
+        for trade in trades:
+            direction = trade.direction.value if hasattr(trade.direction, 'value') else trade.direction
+            if direction not in dist:
+                continue
+                
+            dist[direction]["count"] += 1
+            dist[direction]["pnl"] += trade.pnl
+            if trade.pnl > 0:
+                dist[direction]["wins"] += 1
+                
+        return {
+            "long": {
+                "count": dist["LONG"]["count"],
+                "pnl": round(dist["LONG"]["pnl"], 2),
+                "win_rate": round((dist["LONG"]["wins"] / dist["LONG"]["count"] * 100), 2) if dist["LONG"]["count"] > 0 else 0
+            },
+            "short": {
+                "count": dist["SHORT"]["count"],
+                "pnl": round(dist["SHORT"]["pnl"], 2),
+                "win_rate": round((dist["SHORT"]["wins"] / dist["SHORT"]["count"] * 100), 2) if dist["SHORT"]["count"] > 0 else 0
+            }
+        }
+
+    @staticmethod
+    def get_asset_performance(db: Session, user_id: int) -> Dict:
+        """Get performance by asset type"""
+        trades = db.query(Trade).filter(
+            Trade.user_id == user_id,
+            Trade.status == TradeStatus.CLOSED,
+            Trade.pnl.isnot(None)
+        ).all()
+        
+        assets = defaultdict(lambda: {"count": 0, "pnl": 0, "wins": 0})
+        
+        for trade in trades:
+            asset_type = trade.asset_type or "unknown"
+            assets[asset_type]["count"] += 1
+            assets[asset_type]["pnl"] += trade.pnl
+            if trade.pnl > 0:
+                assets[asset_type]["wins"] += 1
+                
+        result = []
+        for asset, data in assets.items():
+            result.append({
+                "asset_type": asset,
+                "count": data["count"],
+                "pnl": round(data["pnl"], 2),
+                "win_rate": round((data["wins"] / data["count"] * 100), 2) if data["count"] > 0 else 0
+            })
+            
+        return {"assets": result}

@@ -74,3 +74,18 @@ def get_calendar_data(
     if month < 1 or month > 12:
         return {"error": "Month must be between 1 and 12"}
     return AnalyticsService.get_calendar_data(db, user_id, year, month)
+@router.get("/distribution")
+def get_trade_distribution(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
+):
+    """Get trade distribution (Long vs Short)"""
+    return AnalyticsService.get_trade_distribution(db, user_id)
+
+@router.get("/asset-performance")
+def get_asset_performance(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
+):
+    """Get performance by asset type"""
+    return AnalyticsService.get_asset_performance(db, user_id)

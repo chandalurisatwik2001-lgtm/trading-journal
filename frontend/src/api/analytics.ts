@@ -19,5 +19,20 @@ export const analyticsAPI = {
   getPerformance: async (): Promise<PerformanceMetrics> => {
     const response = await axios.get(`${API_BASE_URL}/analytics/performance`);
     return response.data;
+  },
+
+  getCumulativePnL: async (): Promise<any[]> => {
+    const response = await axios.get(`${API_BASE_URL}/analytics/cumulative-pnl`);
+    return response.data;
+  },
+
+  getTradeDistribution: async (): Promise<any> => {
+    const response = await axios.get(`${API_BASE_URL}/analytics/distribution`);
+    return response.data;
+  },
+
+  getAssetPerformance: async (): Promise<any> => {
+    const response = await axios.get(`${API_BASE_URL}/analytics/asset-performance`);
+    return response.data;
   }
 };
