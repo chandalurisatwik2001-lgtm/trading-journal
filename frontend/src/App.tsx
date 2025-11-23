@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Auth/Login';
@@ -8,11 +8,13 @@ import Dashboard from './components/Dashboard/Dashboard';
 import TradeEntryForm from './components/TradeEntry/TradeEntryForm';
 import TradeList from './components/TradeList/TradeList';
 import CalendarView from './components/Calendar/CalendarView';
-import ExchangeSettings from './components/Settings/ExchangeSettings';
-import ReportsDashboard from './components/Reports/ReportsDashboard';
 import LandingPage from './components/Landing/LandingPage';
 import Sidebar from './components/Layout/Sidebar';
 import TopBar from './components/Layout/TopBar';
+
+// Lazy load new components to prevent bundle crashes
+const ExchangeSettings = React.lazy(() => import('./components/Settings/ExchangeSettings'));
+const ReportsDashboard = React.lazy(() => import('./components/Reports/ReportsDashboard'));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -38,15 +40,17 @@ const AppLayout = () => {
         {/* Scrollable Page Content */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative z-10 custom-scrollbar">
           <div className="max-w-7xl mx-auto p-6">
-            <Routes>
-              <Route path="/" element={<Dashboard showLibrary={showWidgetLibrary} setShowLibrary={setShowWidgetLibrary} />} />
-              <Route path="/trades" element={<TradeList />} />
-              <Route path="/new-trade" element={<TradeEntryForm />} />
-              <Route path="/calendar" element={<CalendarView />} />
-              <Route path="/reports" element={<ReportsDashboard />} />
-              <Route path="/settings/exchanges" element={<ExchangeSettings />} />
-              {/* Add other routes as needed */}
-            </Routes>
+            <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading...</div>}>
+              <Routes>
+                <Route path="/" element={<Dashboard showLibrary={showWidgetLibrary} setShowLibrary={setShowWidgetLibrary} />} />
+                <Route path="/trades" element={<TradeList />} />
+                <Route path="/new-trade" element={<TradeEntryForm />} />
+                <Route path="/calendar" element={<CalendarView />} />
+                <Route path="/reports" element={<ReportsDashboard />} />
+                <Route path="/settings/exchanges" element={<ExchangeSettings />} />
+                {/* Add other routes as needed */}
+              </Routes>
+            </Suspense>
           </div>
         </main>
       </div>
