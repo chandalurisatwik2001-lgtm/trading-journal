@@ -18,6 +18,7 @@ class BinanceService:
             'options': {
                 'defaultType': account_type,  # 'spot' or 'future'
                 'adjustForTimeDifference': True,  # Crucial for remote servers
+                'loadMarkets': False,  # Disable automatic market loading to prevent margin endpoint calls
             },
             'has': {
                 'fetchCurrencies': False,  # Disable fetching currencies to avoid hitting sapi endpoints
