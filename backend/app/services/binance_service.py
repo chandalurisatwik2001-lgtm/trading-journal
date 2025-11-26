@@ -28,9 +28,10 @@ class BinanceService:
             # Use demo.binance.com URLs instead of testnet.binance.vision
             # demo.binance.com has less strict geo-restrictions
             demo_urls = {
-                'public': 'https://demo-api.binance.com/api/v3',
-                'private': 'https://demo-api.binance.com/api/v3',
-                'v1': 'https://demo-api.binance.com/api/v1',
+                # Redirect Spot URLs to Futures domain because demo-api (Spot) is geo-blocked
+                'public': 'https://demo-fapi.binance.com/fapi/v1',
+                'private': 'https://demo-fapi.binance.com/fapi/v1',
+                'v1': 'https://demo-fapi.binance.com/fapi/v1',
                 'fapiPublic': 'https://demo-fapi.binance.com/fapi/v1',
                 'fapiPrivate': 'https://demo-fapi.binance.com/fapi/v1',
                 'fapiPublicV2': 'https://demo-fapi.binance.com/fapi/v2',
