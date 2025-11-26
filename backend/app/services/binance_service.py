@@ -65,22 +65,6 @@ class BinanceService:
         
         # Debug logging
         print(f"Binance Service Initialized: Testnet={is_testnet}, Account={account_type}")
-        print(f"API URLs: {self.client.urls.get('api', {})}")
-        print(f"Test URLs: {self.client.urls.get('test', {})}")
-
-
-    def validate_connection(self) -> tuple[bool, str]:
-        try:
-            # Use fetch_balance for validation - it works for both spot and futures
-            # and avoids hitting problematic margin endpoints
-            self.client.fetch_balance()
-            return True, ""
-        except Exception as e:
-            error_msg = str(e)
-            print(f"Connection validation failed: {error_msg}")
-            
-            if "451" in error_msg or "Service unavailable from a restricted location" in error_msg:
-                return False, (
                     "Connection Blocked: The Render server is located in the US, which Binance blocks. "
                     "Please use the 'Use Testnet' option with Testnet keys, or host your backend in a non-US region."
                 )
