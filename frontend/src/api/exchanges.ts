@@ -42,10 +42,26 @@ export const exchangesAPI = {
         return response.data;
     },
 
-    sync: async (exchangeId: number): Promise<{ message: string }> => {
+    sync: async (exchangeId: number): Promise<{ message: string, trades_count: number, balance: any, positions: any }> => {
         const response = await axios.post(
             `${API_BASE_URL}/exchanges/sync/${exchangeId}`,
             {},
+            { headers: getAuthHeaders() }
+        );
+        return response.data;
+    },
+
+    getBalance: async (exchangeId: number): Promise<{ balance: any }> => {
+        const response = await axios.get(
+            `${API_BASE_URL}/exchanges/${exchangeId}/balance`,
+            { headers: getAuthHeaders() }
+        );
+        return response.data;
+    },
+
+    getPositions: async (exchangeId: number): Promise<{ positions: any[] }> => {
+        const response = await axios.get(
+            `${API_BASE_URL}/exchanges/${exchangeId}/positions`,
             { headers: getAuthHeaders() }
         );
         return response.data;

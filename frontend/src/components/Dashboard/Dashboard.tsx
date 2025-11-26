@@ -16,6 +16,7 @@ import ProgressTrackerWidget from './Widgets/ProgressTrackerWidget';
 import ReportWidget from './Widgets/ReportWidget';
 import ExternalLinksWidget from './Widgets/ExternalLinksWidget';
 import { DollarSign, TrendingUp, BarChart2, Activity } from 'lucide-react';
+import { exchangesAPI } from '../../api/exchanges';
 
 interface DashboardProps {
   showLibrary?: boolean;
@@ -50,6 +51,7 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [onboarding, setOnboarding] = useState<any>(null);
+  const [exchangeBalance, setExchangeBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Default widgets - Reordered for priority
@@ -114,6 +116,62 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
     }
   };
 
+  useEffect(() => {
+    loadExchangeData();
+  }, []);
+
+  const loadExchangeData = async () => {
+    try {
+      const connections = await exchangesAPI.getStatus();
+      const activeConn = connections.find(c => c.is_active);
+
+      if (activeConn) {
+        try {
+          const balanceData = await exchangesAPI.getBalance(activeConn.id);
+          // For futures, balance is usually in 'totalWalletBalance' or similar in the list
+          // For spot, it's different. Let's try to parse it safely.
+
+          let totalBalance = 0;
+
+          if (Array.isArray(balanceData.balance)) {
+            // Futures: list of assets. Find USDT and get balance, or sum USD value
+            // Simplified: look for USDT
+            const usdt = balanceData.balance.find((b: any) => b.asset === 'USDT');
+            if (usdt) {
+              totalBalance = parseFloat(usdt.balance);
+            }
+          } else if (balanceData.balance && balanceData.balance.balances) {
+            // Spot
+            // Simplified
+            totalBalance = 0;
+          }
+
+          // Fallback if we can't parse perfectly, or if it's a simple structure
+          if (totalBalance === 0 && balanceData.balance) {
+            // Try to find any field that looks like total balance
+            // Futures often has 'totalWalletBalance' in the account info if we fetched that
+            // But fetch_balance returns list for futures in v2
+
+            // If it's the list from /fapi/v2/balance:
+            // [{"accountAlias":"...","asset":"USDT","balance":"10884.65",...}]
+            if (Array.isArray(balanceData.balance)) {
+              const usdt = balanceData.balance.find((b: any) => b.asset === 'USDT');
+              if (usdt) totalBalance = parseFloat(usdt.balance);
+            }
+          }
+
+          if (totalBalance > 0) {
+            setExchangeBalance(totalBalance);
+          }
+        } catch (err) {
+          console.error("Failed to load exchange balance", err);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load exchange status", err);
+    }
+  };
+
   const setEmptyDefaults = () => {
     setMetrics({
       total_trades: 0,
@@ -162,7 +220,8 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
 
   const currencySymbol = onboarding?.currency ? getCurrencySymbol(onboarding.currency) : '$';
   const initialBalance = onboarding?.initial_balance || 0;
-  const currentBalance = initialBalance + metrics.total_pnl;
+  // Use exchange balance if available, otherwise calculate from initial + pnl
+  const currentBalance = exchangeBalance !== null ? exchangeBalance : (initialBalance + metrics.total_pnl);
 
   // Prepare data for charts
   const chartData = trades
