@@ -65,6 +65,38 @@ class BinanceService:
         
         # Debug logging
         print(f"Binance Service Initialized: Testnet={is_testnet}, Account={account_type}")
+        print(f"API URLs: {self.client.urls.get('api', {})}")
+        print(f"Test URLs: {self.client.urls.get('test', {})}")
+
+
+    def validate_connection(self) -> tuple[bool, str]:
+        try:
+            # Bypass CCXT completely and use direct HTTP request to exchangeInfo
+            # This avoids all margin endpoint calls that CCXT makes internally
+            import requests
+            
+            if self.client.options['defaultType'] == 'future':
+                base_url = self.client.urls['api']['fapiPublic']
+            else:
+                base_url = self.client.urls['api']['public']
+            
+            url = f"{base_url}/exchangeInfo"
+            print(f"Validating connection to: {url}")
+            
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                print("Connection validation successful!")
+                return True, ""
+            else:
+                return False, f"Connection failed: HTTP {response.status_code}"
+                
+        except Exception as e:
+            error_msg = str(e)
+            print(f"Connection validation failed: {error_msg}")
+            
+            if "451" in error_msg or "Service unavailable from a restricted location" in error_msg:
+                return False, (
                     "Connection Blocked: The Render server is located in the US, which Binance blocks. "
                     "Please use the 'Use Testnet' option with Testnet keys, or host your backend in a non-US region."
                 )
