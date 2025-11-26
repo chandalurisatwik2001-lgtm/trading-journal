@@ -22,7 +22,17 @@ class BinanceService:
         })
         
         if is_testnet:
-            self.client.set_sandbox_mode(True)
+            # Use demo.binance.com URLs instead of testnet.binance.vision
+            # demo.binance.com has less strict geo-restrictions
+            self.client.urls['api'] = {
+                'public': 'https://demo-api.binance.com/api/v3',
+                'private': 'https://demo-api.binance.com/api/v3',
+                'v1': 'https://demo-api.binance.com/api/v1',
+                'fapiPublic': 'https://demo-fapi.binance.com/fapi/v1',
+                'fapiPrivate': 'https://demo-fapi.binance.com/fapi/v1',
+                'dapiPublic': 'https://demo-dapi.binance.com/dapi/v1',
+                'dapiPrivate': 'https://demo-dapi.binance.com/dapi/v1',
+            }
             
         # Debug logging
         print(f"Binance Service Initialized: Testnet={is_testnet}, Account={account_type}")
