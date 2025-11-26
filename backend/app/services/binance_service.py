@@ -11,7 +11,7 @@ class BinanceService:
         :param is_testnet: Whether to use testnet
         :param account_type: "spot" or "future"
         """
-        config = {
+        self.client = ccxt.binance({
             'apiKey': api_key,
             'secret': api_secret,
             'enableRateLimit': True,
@@ -19,28 +19,14 @@ class BinanceService:
                 'defaultType': account_type,  # 'spot' or 'future'
                 'adjustForTimeDifference': True,  # Crucial for remote servers
             }
-        }
+        })
         
-        # Configure testnet URLs manually - set_sandbox_mode doesn't work reliably
         if is_testnet:
-            if account_type == 'future':
-                # Binance Futures Testnet (demo.binance.com)
-                config['urls'] = {
-                    'api': {
-                        'public': 'https://testnet.binancefuture.com/fapi/v1',
-                        'private': 'https://testnet.binancefuture.com/fapi/v1',
-                    }
-                }
-            else:
-                # Binance Spot Testnet
-                config['urls'] = {
-                    'api': {
-                        'public': 'https://testnet.binance.vision/api/v3',
-                        'private': 'https://testnet.binance.vision/api/v3',
-                    }
-                }
-        
-        self.client = ccxt.binance(config)
+            self.client.set_sandbox_mode(True)
+            
+        # Debug logging
+        print(f"Binance Service Initialized: Testnet={is_testnet}, Account={account_type}")
+        print(f"URLs: {self.client.urls}")
 
     def validate_connection(self) -> tuple[bool, str]:
         try:
