@@ -21,6 +21,8 @@ class BinanceService:
             },
             'has': {
                 'fetchCurrencies': False,  # Disable fetching currencies to avoid hitting sapi endpoints
+                'fetchMarginMode': False,  # Disable margin mode fetch to avoid hitting sapi endpoints
+                'fetchMarginModes': False, # Disable margin modes fetch to avoid hitting sapi endpoints
             }
         })
         
