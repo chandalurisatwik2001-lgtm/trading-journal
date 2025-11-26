@@ -147,3 +147,86 @@ class BinanceService:
                 'source': 'binance'
             })
         return normalized
+
+    def fetch_balance(self) -> Dict[str, Any]:
+        """Fetch account balance using direct HTTP request"""
+        try:
+            import requests
+            import hmac
+            import hashlib
+            import time
+            
+            if self.client.options['defaultType'] == 'future':
+                base_url = self.client.urls['api']['fapiPrivate']
+                endpoint = '/fapi/v2/balance'
+            else:
+                base_url = self.client.urls['api']['private']
+                endpoint = '/api/v3/account'
+            
+            # Prepare request
+            timestamp = int(time.time() * 1000)
+            params = f'timestamp={timestamp}'
+            
+            # Sign the request
+            signature = hmac.new(
+                self.client.secret.encode('utf-8'),
+                params.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Make the request
+            url = f"{base_url}{endpoint}?{params}&signature={signature}"
+            headers = {'X-MBX-APIKEY': self.client.apiKey}
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data
+            else:
+                raise Exception(f"Failed to fetch balance: {response.text}")
+                
+        except Exception as e:
+            print(f"Error fetching balance: {str(e)}")
+            raise e
+    
+    def fetch_positions(self) -> List[Dict[str, Any]]:
+        """Fetch open positions (futures only) using direct HTTP request"""
+        try:
+            import requests
+            import hmac
+            import hashlib
+            import time
+            
+            if self.client.options['defaultType'] != 'future':
+                return []  # Positions only exist for futures
+            
+            base_url = self.client.urls['api']['fapiPrivate']
+            endpoint = '/fapi/v2/positionRisk'
+            
+            # Prepare request
+            timestamp = int(time.time() * 1000)
+            params = f'timestamp={timestamp}'
+            
+            # Sign the request
+            signature = hmac.new(
+                self.client.secret.encode('utf-8'),
+                params.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Make the request
+            url = f"{base_url}{endpoint}?{params}&signature={signature}"
+            headers = {'X-MBX-APIKEY': self.client.apiKey}
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                positions = response.json()
+                # Filter out positions with 0 quantity
+                open_positions = [p for p in positions if float(p.get('positionAmt', 0)) != 0]
+                return open_positions
+            else:
+                raise Exception(f"Failed to fetch positions: {response.text}")
+                
+        except Exception as e:
+            print(f"Error fetching positions: {str(e)}")
+            raise e
