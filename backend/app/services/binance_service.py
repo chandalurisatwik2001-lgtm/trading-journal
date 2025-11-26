@@ -34,6 +34,11 @@ class BinanceService:
                 'fapiPrivateV2': 'https://demo-fapi.binance.com/fapi/v2',
                 'dapiPublic': 'https://demo-dapi.binance.com/dapi/v1',
                 'dapiPrivate': 'https://demo-dapi.binance.com/dapi/v1',
+                # Add dummy sapi URLs to satisfy ccxt validation
+                'sapi': 'https://demo-api.binance.com/sapi/v1',
+                'sapiV2': 'https://demo-api.binance.com/sapi/v2',
+                'sapiV3': 'https://demo-api.binance.com/sapi/v3',
+                'sapiV4': 'https://demo-api.binance.com/sapi/v4',
             }
             self.client.urls['api'] = demo_urls
             # Also set test URLs to the same demo endpoints
