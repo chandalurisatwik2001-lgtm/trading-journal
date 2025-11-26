@@ -6,9 +6,9 @@ const getApiBaseUrl = (): string => {
         return process.env.REACT_APP_API_URL;
     }
 
-    // For production deployment, construct the API URL from the current origin
+    // For production deployment, use the Render backend URL
     if (process.env.NODE_ENV === 'production') {
-        return `${window.location.origin}/api/v1`;
+        return 'https://trading-journal-an5z.onrender.com/api/v1';
     }
 
     // Default for local development
