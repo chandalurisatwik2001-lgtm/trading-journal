@@ -18,6 +18,9 @@ class BinanceService:
             'options': {
                 'defaultType': account_type,  # 'spot' or 'future'
                 'adjustForTimeDifference': True,  # Crucial for remote servers
+            },
+            'has': {
+                'fetchCurrencies': False,  # Disable fetching currencies to avoid hitting sapi endpoints
             }
         })
         
