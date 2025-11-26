@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
-from app.api import deps
+from app.api.v1.endpoints.auth import get_current_user
+from app.core.database import get_db
 from app.models.user import User
 from app.models.exchange import ExchangeConnection
 from app.models.trade import Trade
@@ -29,8 +30,8 @@ class ExchangeStatus(BaseModel):
 @router.post("/connect", response_model=ExchangeStatus)
 def connect_exchange(
     data: ExchangeConnectRequest,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     # 1. Validate keys with Binance
     service = BinanceService(data.api_key, data.api_secret, data.is_testnet, data.account_type)
@@ -71,8 +72,8 @@ def connect_exchange(
 
 @router.get("/status", response_model=List[ExchangeStatus])
 def get_exchange_status(
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     connections = db.query(ExchangeConnection).filter(
         ExchangeConnection.user_id == current_user.id,
@@ -83,8 +84,8 @@ def get_exchange_status(
 @router.post("/sync/{exchange_id}")
 def sync_trades(
     exchange_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     conn = db.query(ExchangeConnection).filter(
         ExchangeConnection.id == exchange_id,
