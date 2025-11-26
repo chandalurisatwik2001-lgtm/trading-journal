@@ -52,6 +52,7 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
   const [trades, setTrades] = useState<Trade[]>([]);
   const [onboarding, setOnboarding] = useState<any>(null);
   const [exchangeBalance, setExchangeBalance] = useState<number | null>(null);
+  const [exchangePositions, setExchangePositions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Default widgets - Reordered for priority
@@ -165,6 +166,15 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
           }
         } catch (err) {
           console.error("Failed to load exchange balance", err);
+        }
+
+        try {
+          const positionsData = await exchangesAPI.getPositions(activeConn.id);
+          if (positionsData.positions && Array.isArray(positionsData.positions)) {
+            setExchangePositions(positionsData.positions);
+          }
+        } catch (err) {
+          console.error("Failed to load exchange positions", err);
         }
       }
     } catch (err) {
@@ -417,6 +427,7 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
                   <RecentTradesWidget
                     key={widgetId}
                     trades={trades}
+                    positions={exchangePositions}
                     onRemove={() => handleRemoveWidget(widgetId)}
                   />
                 );
