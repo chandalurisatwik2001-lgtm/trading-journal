@@ -25,29 +25,30 @@ class BinanceService:
         })
         
         if is_testnet:
-            # Use demo.binance.com URLs instead of testnet.binance.vision
-            # demo.binance.com has less strict geo-restrictions
-            demo_urls = {
-                # Redirect Spot URLs to Futures domain because demo-api (Spot) is geo-blocked
-                'public': 'https://demo-fapi.binance.com/fapi/v1',
-                'private': 'https://demo-fapi.binance.com/fapi/v1',
-                'v1': 'https://demo-fapi.binance.com/fapi/v1',
-                'fapiPublic': 'https://demo-fapi.binance.com/fapi/v1',
-                'fapiPrivate': 'https://demo-fapi.binance.com/fapi/v1',
-                'fapiPublicV2': 'https://demo-fapi.binance.com/fapi/v2',
-                'fapiPrivateV2': 'https://demo-fapi.binance.com/fapi/v2',
-                'dapiPublic': 'https://demo-dapi.binance.com/dapi/v1',
-                'dapiPrivate': 'https://demo-dapi.binance.com/dapi/v1',
-                # Add dummy sapi URLs to satisfy ccxt validation
-                # Pointing to fapi domain because demo-api (Spot) is geo-blocked
-                'sapi': 'https://demo-fapi.binance.com/fapi/v1',
-                'sapiV2': 'https://demo-fapi.binance.com/fapi/v1',
-                'sapiV3': 'https://demo-fapi.binance.com/fapi/v1',
-                'sapiV4': 'https://demo-fapi.binance.com/fapi/v1',
+            # Use testnet.binancefuture.com which is the official Futures Testnet
+            testnet_urls = {
+                # Redirect Spot URLs to Futures domain to avoid geo-blocking
+                'public': 'https://testnet.binancefuture.com/fapi/v1',
+                'private': 'https://testnet.binancefuture.com/fapi/v1',
+                'v1': 'https://testnet.binancefuture.com/fapi/v1',
+                
+                # Official Futures Testnet Endpoints
+                'fapiPublic': 'https://testnet.binancefuture.com/fapi/v1',
+                'fapiPrivate': 'https://testnet.binancefuture.com/fapi/v1',
+                'fapiPublicV2': 'https://testnet.binancefuture.com/fapi/v2',
+                'fapiPrivateV2': 'https://testnet.binancefuture.com/fapi/v2',
+                'dapiPublic': 'https://testnet.binancefuture.com/dapi/v1',
+                'dapiPrivate': 'https://testnet.binancefuture.com/dapi/v1',
+                
+                # Redirect SAPI (Spot) to Futures to satisfy validation without hitting blocked endpoints
+                'sapi': 'https://testnet.binancefuture.com/fapi/v1',
+                'sapiV2': 'https://testnet.binancefuture.com/fapi/v1',
+                'sapiV3': 'https://testnet.binancefuture.com/fapi/v1',
+                'sapiV4': 'https://testnet.binancefuture.com/fapi/v1',
             }
-            self.client.urls['api'] = demo_urls
-            # Also set test URLs to the same demo endpoints
-            self.client.urls['test'] = demo_urls
+            self.client.urls['api'] = testnet_urls
+            # Also set test URLs to the same endpoints
+            self.client.urls['test'] = testnet_urls
             
         # Debug logging
         print(f"Binance Service Initialized: Testnet={is_testnet}, Account={account_type}")
