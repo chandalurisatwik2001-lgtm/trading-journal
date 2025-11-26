@@ -51,9 +51,12 @@ class BinanceService:
 
     def validate_connection(self) -> tuple[bool, str]:
         try:
-            # Use load_markets instead of fetch_balance to avoid sapi endpoints
-            # load_markets works for both spot and futures and doesn't need sapi
-            self.client.load_markets()
+            # Use fetch_positions for futures to avoid sapi endpoints
+            # This is strictly a futures endpoint (fapi) and shouldn't hit restricted spot APIs
+            if self.client.options['defaultType'] == 'future':
+                self.client.fetch_positions()
+            else:
+                self.client.fetch_balance()
             return True, ""
         except Exception as e:
             error_msg = str(e)
