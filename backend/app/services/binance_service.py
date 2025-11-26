@@ -54,11 +54,19 @@ class BinanceService:
             self.client.urls['api'] = testnet_urls
             # Also set test URLs to the same endpoints
             self.client.urls['test'] = testnet_urls
-            
+        
+        # Monkey-patch to prevent margin API calls
+        # Override the method that calls /fapi/v1/margin/allPairs
+        def dummy_fetch_margin_modes(*args, **kwargs):
+            return []
+        
+        self.client.fetch_margin_modes = dummy_fetch_margin_modes
+        
         # Debug logging
         print(f"Binance Service Initialized: Testnet={is_testnet}, Account={account_type}")
         print(f"API URLs: {self.client.urls.get('api', {})}")
         print(f"Test URLs: {self.client.urls.get('test', {})}")
+
 
     def validate_connection(self) -> tuple[bool, str]:
         try:
