@@ -131,7 +131,73 @@ def sync_trades(
             count += 1
             
         db.commit()
-        return {"message": f"Synced {count} trades successfully"}
+        
+        # Also fetch balance and positions
+        balance = service.fetch_balance()
+        positions = service.fetch_positions()
+        
+        return {
+            "message": f"Synced {count} trades successfully",
+            "trades_count": count,
+            "balance": balance,
+            "positions": positions
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+@router.get("/{exchange_id}/balance")
+def get_balance(
+    exchange_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get account balance for a connected exchange"""
+    conn = db.query(ExchangeConnection).filter(
+        ExchangeConnection.id == exchange_id,
+        ExchangeConnection.user_id == current_user.id
+    ).first()
+    
+    if not conn:
+        raise HTTPException(status_code=404, detail="Exchange connection not found")
+
+    # Decrypt keys
+    api_key = decrypt_string(conn.api_key_encrypted)
+    api_secret = decrypt_string(conn.api_secret_encrypted)
+    
+    # Fetch balance
+    account_type = getattr(conn, 'account_type', 'spot')
+    service = BinanceService(api_key, api_secret, conn.is_testnet, account_type)
+    try:
+        balance = service.fetch_balance()
+        return {"balance": balance}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch balance: {str(e)}")
+
+@router.get("/{exchange_id}/positions")
+def get_positions(
+    exchange_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get open positions for a connected exchange (futures only)"""
+    conn = db.query(ExchangeConnection).filter(
+        ExchangeConnection.id == exchange_id,
+        ExchangeConnection.user_id == current_user.id
+    ).first()
+    
+    if not conn:
+        raise HTTPException(status_code=404, detail="Exchange connection not found")
+
+    # Decrypt keys
+    api_key = decrypt_string(conn.api_key_encrypted)
+    api_secret = decrypt_string(conn.api_secret_encrypted)
+    
+    # Fetch positions
+    account_type = getattr(conn, 'account_type', 'spot')
+    service = BinanceService(api_key, api_secret, conn.is_testnet, account_type)
+    try:
+        positions = service.fetch_positions()
+        return {"positions": positions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch positions: {str(e)}")
