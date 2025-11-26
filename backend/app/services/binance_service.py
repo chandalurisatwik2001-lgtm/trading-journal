@@ -65,7 +65,14 @@ class BinanceService:
         except Exception as e:
             error_msg = str(e)
             print(f"Connection validation failed: {error_msg}")
-            return False, error_msg
+            
+            if "451" in error_msg or "Service unavailable from a restricted location" in error_msg:
+                return False, (
+                    "Connection Blocked: The Render server is located in the US, which Binance blocks. "
+                    "Please use the 'Use Testnet' option with Testnet keys, or host your backend in a non-US region."
+                )
+            
+            return False, f"Connection failed: {error_msg}"
 
     def fetch_trades(self, symbol: str = None, limit: int = 1000) -> List[Dict[str, Any]]:
         try:
