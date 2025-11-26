@@ -80,7 +80,7 @@ class BinanceService:
             else:
                 base_url = self.client.urls['api']['public']
             
-            url = f"{base_url}/exchangeInfo"
+            url = f"{base_domain}/exchangeInfo"
             print(f"Validating connection to: {url}")
             
             response = requests.get(url, timeout=10)
@@ -157,10 +157,11 @@ class BinanceService:
             import time
             
             if self.client.options['defaultType'] == 'future':
-                base_url = self.client.urls['api']['fapiPrivate']
+                # Extract base domain from URL (remove path)
+                base_domain = self.client.urls['api']['fapiPrivate'].split('/fapi')[0]
                 endpoint = '/fapi/v2/balance'
             else:
-                base_url = self.client.urls['api']['private']
+                base_domain = self.client.urls['api']['private'].split('/api')[0]
                 endpoint = '/api/v3/account'
             
             # Prepare request
@@ -175,7 +176,7 @@ class BinanceService:
             ).hexdigest()
             
             # Make the request
-            url = f"{base_url}{endpoint}?{params}&signature={signature}"
+            url = f"{base_domain}{endpoint}?{params}&signature={signature}"
             headers = {'X-MBX-APIKEY': self.client.apiKey}
             response = requests.get(url, headers=headers, timeout=10)
             
@@ -200,7 +201,8 @@ class BinanceService:
             if self.client.options['defaultType'] != 'future':
                 return []  # Positions only exist for futures
             
-            base_url = self.client.urls['api']['fapiPrivate']
+            # Extract base domain from URL (remove path)
+            base_domain = self.client.urls['api']['fapiPrivate'].split('/fapi')[0]
             endpoint = '/fapi/v2/positionRisk'
             
             # Prepare request
@@ -215,7 +217,7 @@ class BinanceService:
             ).hexdigest()
             
             # Make the request
-            url = f"{base_url}{endpoint}?{params}&signature={signature}"
+            url = f"{base_domain}{endpoint}?{params}&signature={signature}"
             headers = {'X-MBX-APIKEY': self.client.apiKey}
             response = requests.get(url, headers=headers, timeout=10)
             
