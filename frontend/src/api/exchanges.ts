@@ -18,19 +18,36 @@ export interface ExchangeStatus {
     last_synced_at: string | null;
 }
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const exchangesAPI = {
     connect: async (data: ExchangeConnectRequest): Promise<ExchangeStatus> => {
-        const response = await axios.post(`${API_BASE_URL}/exchanges/connect`, data);
+        const response = await axios.post(
+            `${API_BASE_URL}/exchanges/connect`,
+            data,
+            { headers: getAuthHeaders() }
+        );
         return response.data;
     },
 
     getStatus: async (): Promise<ExchangeStatus[]> => {
-        const response = await axios.get(`${API_BASE_URL}/exchanges/status`);
+        const response = await axios.get(
+            `${API_BASE_URL}/exchanges/status`,
+            { headers: getAuthHeaders() }
+        );
         return response.data;
     },
 
     sync: async (exchangeId: number): Promise<{ message: string }> => {
-        const response = await axios.post(`${API_BASE_URL}/exchanges/sync/${exchangeId}`);
+        const response = await axios.post(
+            `${API_BASE_URL}/exchanges/sync/${exchangeId}`,
+            {},
+            { headers: getAuthHeaders() }
+        );
         return response.data;
     }
 };
