@@ -13,3 +13,4 @@ ccxt>=4.0.0
 gunicorn==21.2.0
 psycopg2-binary==2.9.9
 email-validator==2.1.0.post1
+bcrypt==4.0.1
