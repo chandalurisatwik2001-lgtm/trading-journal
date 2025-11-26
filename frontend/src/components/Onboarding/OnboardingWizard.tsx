@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api';
 import OnboardingLayout from './OnboardingLayout';
 import Step1Experience from './Steps/Step1Experience';
 import Step2Goals from './Steps/Step2Goals';
@@ -41,7 +42,7 @@ const OnboardingWizard: React.FC = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/users/me/onboarding`, {
+            const response = await fetch(`${API_BASE_URL}/users/me/onboarding`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trade } from '../../api/trades';
 import { format } from 'date-fns';
+import { API_BASE_URL } from '../../config/api';
 
 interface PerformanceMetrics {
   total_trades: number;
@@ -34,8 +35,8 @@ const TradeList: React.FC = () => {
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
       const [tradesRes, metricsRes] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL}/trades/`, { headers }),
-        fetch(`${process.env.REACT_APP_API_URL}/metrics/performance`, { headers })
+        fetch(`${API_BASE_URL}/trades/`, { headers }),
+        fetch(`${API_BASE_URL}/metrics/performance`, { headers })
       ]);
 
       const tradesData = await tradesRes.json();

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, getWeek } from 'date-fns';
+import { API_BASE_URL } from '../../config/api';
 
 interface Trade {
   id: number;
@@ -25,7 +26,7 @@ const CalendarView: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/trades/`, { headers });
+      const response = await fetch(`${API_BASE_URL}/trades/`, { headers });
       const data = await response.json();
       setTrades(data);
     } catch (error) {

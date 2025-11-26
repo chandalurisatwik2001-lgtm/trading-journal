@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api';
 import TradingExperienceStep from '../Onboarding/TradingExperienceStep';
 import GoalsStep from '../Onboarding/GoalsStep';
 import BrokerStep from '../Onboarding/BrokerStep';
@@ -38,7 +39,7 @@ const OnboardingFlow: React.FC = () => {
   const handleComplete = async () => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.REACT_APP_API_URL}/users/onboarding`, {
+      await fetch(`${API_BASE_URL}/users/onboarding`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

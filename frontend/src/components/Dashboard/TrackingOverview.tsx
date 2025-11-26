@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
+import { API_BASE_URL } from '../../config/api';
 
 interface PerformanceMetrics {
   total_trades: number;
@@ -41,8 +42,8 @@ const TrackingOverview: React.FC = () => {
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
       const [metricsRes, tradesRes] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL}/metrics/performance`, { headers }),
-        fetch(`${process.env.REACT_APP_API_URL}/trades/`, { headers })
+        fetch(`${API_BASE_URL}/metrics/performance`, { headers }),
+        fetch(`${API_BASE_URL}/trades/`, { headers })
       ]);
 
       const metricsData = await metricsRes.json();

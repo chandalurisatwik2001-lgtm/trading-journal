@@ -5,6 +5,7 @@ import { Eye, EyeOff, ArrowRight, Check, X, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
 import SignupVisuals from './SignupVisuals';
 import AuthTabs from './AuthTabs';
+import { API_BASE_URL } from '../../config/api';
 
 const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -58,7 +59,7 @@ const Signup: React.FC = () => {
     const timeoutId = setTimeout(async () => {
       setCheckingEmail(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/check-email?email=${encodeURIComponent(email)}`);
+        const response = await fetch(`${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`);
         const data = await response.json();
         setEmailAvailable(data.available);
       } catch (error) {
@@ -82,7 +83,7 @@ const Signup: React.FC = () => {
     const timeoutId = setTimeout(async () => {
       setCheckingUsername(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/check-username?username=${encodeURIComponent(username)}`);
+        const response = await fetch(`${API_BASE_URL}/auth/check-username?username=${encodeURIComponent(username)}`);
         const data = await response.json();
         setUsernameAvailable(data.available);
       } catch (error) {

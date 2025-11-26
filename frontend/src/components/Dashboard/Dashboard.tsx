@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
+import { API_BASE_URL } from '../../config/api';
 import WidgetLibrary, { WidgetType } from './Widgets/WidgetLibrary';
 import AccountBalanceWidget from './Widgets/AccountBalanceWidget';
 import AvgWinLossWidget from './Widgets/AvgWinLossWidget';
@@ -85,9 +86,9 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
       const [metricsRes, tradesRes, onboardingRes] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL}/metrics/performance`, { headers }),
-        fetch(`${process.env.REACT_APP_API_URL}/trades/`, { headers }),
-        fetch(`${process.env.REACT_APP_API_URL}/users/me/onboarding`, { headers })
+        fetch(`${API_BASE_URL}/metrics/performance`, { headers }),
+        fetch(`${API_BASE_URL}/trades/`, { headers }),
+        fetch(`${API_BASE_URL}/users/me/onboarding`, { headers })
       ]);
 
       if (metricsRes.ok && tradesRes.ok) {
