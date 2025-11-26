@@ -24,19 +24,25 @@ class BinanceService:
         if is_testnet:
             # Use demo.binance.com URLs instead of testnet.binance.vision
             # demo.binance.com has less strict geo-restrictions
-            self.client.urls['api'] = {
+            demo_urls = {
                 'public': 'https://demo-api.binance.com/api/v3',
                 'private': 'https://demo-api.binance.com/api/v3',
                 'v1': 'https://demo-api.binance.com/api/v1',
                 'fapiPublic': 'https://demo-fapi.binance.com/fapi/v1',
                 'fapiPrivate': 'https://demo-fapi.binance.com/fapi/v1',
+                'fapiPublicV2': 'https://demo-fapi.binance.com/fapi/v2',
+                'fapiPrivateV2': 'https://demo-fapi.binance.com/fapi/v2',
                 'dapiPublic': 'https://demo-dapi.binance.com/dapi/v1',
                 'dapiPrivate': 'https://demo-dapi.binance.com/dapi/v1',
             }
+            self.client.urls['api'] = demo_urls
+            # Also set test URLs to the same demo endpoints
+            self.client.urls['test'] = demo_urls
             
         # Debug logging
         print(f"Binance Service Initialized: Testnet={is_testnet}, Account={account_type}")
-        print(f"URLs: {self.client.urls}")
+        print(f"API URLs: {self.client.urls.get('api', {})}")
+        print(f"Test URLs: {self.client.urls.get('test', {})}")
 
     def validate_connection(self) -> tuple[bool, str]:
         try:
