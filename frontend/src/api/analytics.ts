@@ -17,22 +17,22 @@ export interface PerformanceMetrics {
 
 export const analyticsAPI = {
   getPerformance: async (): Promise<PerformanceMetrics> => {
-    const response = await axios.get(`${API_BASE_URL}/analytics/performance`);
+    const response = await axios.get(`${API_BASE_URL}/metrics/performance`);
     return response.data;
   },
 
   getCumulativePnL: async (): Promise<any[]> => {
-    const response = await axios.get(`${API_BASE_URL}/analytics/cumulative-pnl`);
+    const response = await axios.get(`${API_BASE_URL}/metrics/cumulative-pnl`);
     return response.data;
   },
 
   getTradeDistribution: async (): Promise<any> => {
-    const response = await axios.get(`${API_BASE_URL}/analytics/distribution`);
+    const response = await axios.get(`${API_BASE_URL}/metrics/distribution`);
     return response.data;
   },
 
   getAssetPerformance: async (): Promise<any> => {
-    const response = await axios.get(`${API_BASE_URL}/analytics/asset-performance`);
+    const response = await axios.get(`${API_BASE_URL}/metrics/asset-performance`);
     return response.data;
   }
 };

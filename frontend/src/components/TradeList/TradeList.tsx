@@ -35,7 +35,7 @@ const TradeList: React.FC = () => {
 
       const [tradesRes, metricsRes] = await Promise.all([
         fetch(`${process.env.REACT_APP_API_URL}/trades/`, { headers }),
-        fetch(`${process.env.REACT_APP_API_URL}/analytics/performance`, { headers })
+        fetch(`${process.env.REACT_APP_API_URL}/metrics/performance`, { headers })
       ]);
 
       const tradesData = await tradesRes.json();

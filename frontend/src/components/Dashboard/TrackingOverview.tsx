@@ -41,7 +41,7 @@ const TrackingOverview: React.FC = () => {
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
       const [metricsRes, tradesRes] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL}/analytics/performance`, { headers }),
+        fetch(`${process.env.REACT_APP_API_URL}/metrics/performance`, { headers }),
         fetch(`${process.env.REACT_APP_API_URL}/trades/`, { headers })
       ]);
 
@@ -124,8 +124,8 @@ const TrackingOverview: React.FC = () => {
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`px-4 py-2 font-medium text-sm border-b-2 transition ${activeTab === 'overview'
-                      ? 'border-purple-600 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-purple-600 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   Overview
@@ -133,8 +133,8 @@ const TrackingOverview: React.FC = () => {
                 <button
                   onClick={() => setActiveTab('playbook')}
                   className={`px-4 py-2 font-medium text-sm border-b-2 transition ${activeTab === 'playbook'
-                      ? 'border-purple-600 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-purple-600 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   Playbook edge
@@ -142,8 +142,8 @@ const TrackingOverview: React.FC = () => {
                 <button
                   onClick={() => setActiveTab('winrate')}
                   className={`px-4 py-2 font-medium text-sm border-b-2 transition ${activeTab === 'winrate'
-                      ? 'border-purple-600 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-purple-600 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   Win rate
@@ -151,8 +151,8 @@ const TrackingOverview: React.FC = () => {
                 <button
                   onClick={() => setActiveTab('risk')}
                   className={`px-4 py-2 font-medium text-sm border-b-2 transition ${activeTab === 'risk'
-                      ? 'border-purple-600 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-purple-600 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   Risk & R-multiple

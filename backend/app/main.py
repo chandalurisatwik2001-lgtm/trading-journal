@@ -43,7 +43,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
+app.include_router(analytics.router, prefix="/api/v1/metrics", tags=["analytics"])
 app.include_router(trades.router, prefix="/api/v1/trades", tags=["trades"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(exchanges.router, prefix="/api/v1/exchanges", tags=["exchanges"])
