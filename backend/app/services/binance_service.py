@@ -23,6 +23,9 @@ class BinanceService:
                 'fetchCurrencies': False,  # Disable fetching currencies to avoid hitting sapi endpoints
                 'fetchMarginMode': False,  # Disable margin mode fetch to avoid hitting sapi endpoints
                 'fetchMarginModes': False, # Disable margin modes fetch to avoid hitting sapi endpoints
+                'fetchMarkets': False,     # Disable market fetch which might call margin endpoints
+                'fetchTradingFees': False, # Disable trading fees fetch
+                'fetchFundingRates': False, # Disable funding rates
             }
         })
         
@@ -59,12 +62,9 @@ class BinanceService:
 
     def validate_connection(self) -> tuple[bool, str]:
         try:
-            # Use fetch_positions for futures to avoid sapi endpoints
-            # This is strictly a futures endpoint (fapi) and shouldn't hit restricted spot APIs
-            if self.client.options['defaultType'] == 'future':
-                self.client.fetch_positions()
-            else:
-                self.client.fetch_balance()
+            # Use fetch_balance for validation - it works for both spot and futures
+            # and avoids hitting problematic margin endpoints
+            self.client.fetch_balance()
             return True, ""
         except Exception as e:
             error_msg = str(e)
