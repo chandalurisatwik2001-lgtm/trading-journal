@@ -58,4 +58,4 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-# Trigger reload - v3 (with all margin fixes)
+# Trigger reload - v4 (with exchangeInfo fix)
