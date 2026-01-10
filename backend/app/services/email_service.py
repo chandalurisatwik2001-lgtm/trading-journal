@@ -147,8 +147,14 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         print("🔌 Connecting to Gmail SMTP server...")
         sys.stdout.flush()
         
-        # Connect to Gmail SMTP server
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        # Connect to Gmail SMTP server using port 587 (STARTTLS) instead of 465 (SSL)
+        # Port 587 is more reliable on cloud platforms like Render
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            print("🔐 Starting TLS...")
+            sys.stdout.flush()
+            
+            server.starttls()  # Upgrade connection to secure
+            
             print("🔐 Logging in...")
             sys.stdout.flush()
             
