@@ -8,9 +8,10 @@ from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 import hashlib
 import json
+import uuid
 
 from app.core.database import get_db
-from app.models import User, UserOnboarding
+from app.models import User, UserOnboarding, PasswordResetToken
 
 router = APIRouter()
 
@@ -314,3 +315,115 @@ async def get_onboarding(
     
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+# Password Reset Endpoints
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+    @field_validator('new_password')
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 6:
+            raise ValueError('Password must be at least 6 characters')
+        if len(v) > 72:
+            raise ValueError('Password cannot be longer than 72 characters')
+        return v
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Request a password reset token"""
+    
+    # Find user by email
+    user = db.query(User).filter(User.email == request.email.lower()).first()
+    
+    # Always return success to prevent email enumeration
+    if not user:
+        return {"message": "If the email exists, a password reset link has been sent"}
+    
+    # Generate unique reset token
+    reset_token = str(uuid.uuid4())
+    
+    # Set expiration to 1 hour from now
+    expires_at = datetime.utcnow() + timedelta(hours=1)
+    
+    # Create password reset token record
+    db_token = PasswordResetToken(
+        user_id=user.id,
+        token=reset_token,
+        expires_at=expires_at
+    )
+    db.add(db_token)
+    db.commit()
+    
+    # Mock email - log to console (replace with real email service in production)
+    reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
+    print("\n" + "="*80)
+    print("PASSWORD RESET REQUEST")
+    print("="*80)
+    print(f"User: {user.email}")
+    print(f"Reset Link: {reset_link}")
+    print(f"Token expires at: {expires_at}")
+    print("="*80 + "\n")
+    
+    return {"message": "If the email exists, a password reset link has been sent"}
+
+@router.post("/verify-reset-token", status_code=status.HTTP_200_OK)
+async def verify_reset_token(token: str, db: Session = Depends(get_db)):
+    """Verify if a reset token is valid"""
+    
+    db_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == token,
+        PasswordResetToken.used == False,
+        PasswordResetToken.expires_at > datetime.utcnow()
+    ).first()
+    
+    if not db_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    return {"valid": True}
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Reset password using a valid token"""
+    
+    # Find valid token
+    db_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == request.token,
+        PasswordResetToken.used == False,
+        PasswordResetToken.expires_at > datetime.utcnow()
+    ).first()
+    
+    if not db_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    # Find user
+    user = db.query(User).filter(User.id == db_token.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update password
+    user.hashed_password = get_password_hash(request.new_password)
+    user.updated_at = datetime.utcnow()
+    
+    # Mark token as used
+    db_token.used = True
+    
+    db.commit()
+    
+    print(f"\n✓ Password successfully reset for user: {user.email}\n")
+    
+    return {"message": "Password has been reset successfully"}

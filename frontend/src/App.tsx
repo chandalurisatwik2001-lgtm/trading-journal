@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import ResetPassword from './components/Auth/ResetPassword';
 import OnboardingWizard from './components/Onboarding/OnboardingWizard';
 import Dashboard from './components/Dashboard/Dashboard';
 import TradeEntryForm from './components/TradeEntry/TradeEntryForm';
@@ -67,6 +69,8 @@ const AppRoutes = () => {
       <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={isAuthenticated ? <Navigate to="/onboarding" /> : <Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route
         path="/onboarding"

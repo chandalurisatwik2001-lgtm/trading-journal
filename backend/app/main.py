@@ -3,25 +3,39 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.api.v1.endpoints import auth, analytics, trades, users, exchanges
 from app.core.database import engine, Base
-from app.models import Trade, User, UserOnboarding, ExchangeConnection  # Add all models
+from app.models import Trade, User, UserOnboarding, ExchangeConnection, PasswordResetToken  # Add all models
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Create database tables
-    Base.metadata.create_all(bind=engine)
+    from sqlalchemy import text, exc
     
-    # Run schema migrations for existing tables
-    from sqlalchemy import text
-    with engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'manual'"))
-            conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS asset_type VARCHAR DEFAULT 'stock'"))
-            conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS commission FLOAT DEFAULT 0.0"))
-            conn.execute(text("ALTER TABLE exchange_connections ADD COLUMN IF NOT EXISTS account_type VARCHAR DEFAULT 'spot'"))
-            conn.commit()
-            print("Schema migration completed successfully")
-        except Exception as e:
-            print(f"Schema migration warning: {e}")
+    try:
+        Base.metadata.create_all(bind=engine)
+        
+        # Run schema migrations for existing tables
+        with engine.connect() as conn:
+            try:
+                conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'manual'"))
+                conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS asset_type VARCHAR DEFAULT 'stock'"))
+                conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS commission FLOAT DEFAULT 0.0"))
+                conn.execute(text("ALTER TABLE exchange_connections ADD COLUMN IF NOT EXISTS account_type VARCHAR DEFAULT 'spot'"))
+                conn.commit()
+                print("Schema migration completed successfully")
+            except Exception as e:
+                print(f"Schema migration warning: {e}")
+
+    except exc.OperationalError as e:
+        if "Tenant or user not found" in str(e):
+            print("\n" + "="*80)
+            print("CRITICAL DATABASE CONNECTION ERROR: Tenant or user not found")
+            print("="*80)
+            print("You are likely connecting to the Supabase Transaction Pooler (port 6543).")
+            print("For the Transaction Pooler, your database username must include the project prefix.")
+            print("Example: 'postgres.yourprojectid' instead of just 'postgres'.")
+            print("Please update your DATABASE_URL environment variable in Render.")
+            print("="*80 + "\n")
+        raise e
             
     print("Database tables created successfully")
     yield
