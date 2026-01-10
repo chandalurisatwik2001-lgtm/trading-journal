@@ -12,6 +12,7 @@ import uuid
 
 from app.core.database import get_db
 from app.models import User, UserOnboarding, PasswordResetToken
+from app.services.email_service import send_password_reset_email
 
 router = APIRouter()
 
@@ -360,15 +361,17 @@ async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(
     db.add(db_token)
     db.commit()
     
-    # Mock email - log to console (replace with real email service in production)
-    reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
-    print("\n" + "="*80)
-    print("PASSWORD RESET REQUEST")
-    print("="*80)
-    print(f"User: {user.email}")
-    print(f"Reset Link: {reset_link}")
-    print(f"Token expires at: {expires_at}")
-    print("="*80 + "\n")
+    # Get frontend URL from environment variable or use production URL
+    import os
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://tradingjournal-liard.vercel.app')
+    reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+    
+    # Send password reset email
+    send_password_reset_email(
+        to_email=user.email,
+        reset_link=reset_link,
+        expires_at=str(expires_at)
+    )
     
     return {"message": "If the email exists, a password reset link has been sent"}
 
