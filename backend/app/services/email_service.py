@@ -1,11 +1,12 @@
 # email_service.py
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -> bool:
     """
-    Send password reset email using SendGrid.
+    Send password reset email using Gmail SMTP.
     
     Args:
         to_email: Recipient email address
@@ -16,14 +17,14 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         bool: True if email sent successfully, False otherwise
     """
     
-    # Get SendGrid API key from environment
-    sendgrid_api_key = os.environ.get('SENDGRID_API_KEY')
-    from_email = os.environ.get('FROM_EMAIL', 'noreply@tradezella.com')
+    # Get Gmail credentials from environment
+    gmail_user = os.environ.get('GMAIL_USER')
+    gmail_app_password = os.environ.get('GMAIL_APP_PASSWORD')
     
-    # If no API key, fall back to console logging
-    if not sendgrid_api_key:
+    # If no credentials, fall back to console logging
+    if not gmail_user or not gmail_app_password:
         print("\n" + "="*80)
-        print("⚠️  SENDGRID_API_KEY not found - Using console logging")
+        print("⚠️  Gmail credentials not found - Using console logging")
         print("="*80)
         print(f"To: {to_email}")
         print(f"Reset Link: {reset_link}")
@@ -121,17 +122,22 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
     """
     
     try:
-        message = Mail(
-            from_email=Email(from_email),
-            to_emails=To(to_email),
-            subject=subject,
-            html_content=Content("text/html", html_content)
-        )
+        # Create message
+        message = MIMEMultipart('alternative')
+        message['Subject'] = subject
+        message['From'] = gmail_user
+        message['To'] = to_email
         
-        sg = SendGridAPIClient(sendgrid_api_key)
-        response = sg.send(message)
+        # Attach HTML content
+        html_part = MIMEText(html_content, 'html')
+        message.attach(html_part)
         
-        print(f"✅ Password reset email sent to {to_email} (Status: {response.status_code})")
+        # Connect to Gmail SMTP server
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(gmail_user, gmail_app_password)
+            server.send_message(message)
+        
+        print(f"✅ Password reset email sent to {to_email}")
         return True
         
     except Exception as e:
@@ -145,3 +151,4 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         print(f"Expires: {expires_at}")
         print("="*80 + "\n")
         return False
+
