@@ -1,13 +1,11 @@
 # email_service.py
 import os
 import sys
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 
 def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -> bool:
     """
-    Send password reset email using Gmail SMTP.
+    Send password reset email using Resend API (HTTP-based, works on all platforms).
     
     Args:
         to_email: Recipient email address
@@ -21,18 +19,18 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
     print(f"🔍 Attempting to send password reset email to: {to_email}")
     sys.stdout.flush()
     
-    # Get Gmail credentials from environment
-    gmail_user = os.environ.get('GMAIL_USER')
-    gmail_app_password = os.environ.get('GMAIL_APP_PASSWORD')
+    # Get Resend API key from environment
+    resend_api_key = os.environ.get('RESEND_API_KEY')
+    from_email = os.environ.get('FROM_EMAIL', 'onboarding@resend.dev')
     
-    print(f"📧 Gmail user: {gmail_user if gmail_user else 'NOT SET'}")
-    print(f"🔑 Gmail password: {'SET' if gmail_app_password else 'NOT SET'}")
+    print(f"📧 From email: {from_email}")
+    print(f"🔑 Resend API key: {'SET' if resend_api_key else 'NOT SET'}")
     sys.stdout.flush()
     
-    # If no credentials, fall back to console logging
-    if not gmail_user or not gmail_app_password:
+    # If no API key, fall back to console logging
+    if not resend_api_key:
         print("\n" + "="*80)
-        print("⚠️  Gmail credentials not found - Using console logging")
+        print("⚠️  RESEND_API_KEY not found - Using console logging")
         print("="*80)
         print(f"To: {to_email}")
         print(f"Reset Link: {reset_link}")
@@ -131,43 +129,35 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
     """
     
     try:
-        print("📨 Creating email message...")
+        print("📨 Sending email via Resend API...")
         sys.stdout.flush()
         
-        # Create message
-        message = MIMEMultipart('alternative')
-        message['Subject'] = subject
-        message['From'] = gmail_user
-        message['To'] = to_email
+        # Send email using Resend API
+        response = requests.post(
+            'https://api.resend.com/emails',
+            headers={
+                'Authorization': f'Bearer {resend_api_key}',
+                'Content-Type': 'application/json'
+            },
+            json={
+                'from': from_email,
+                'to': [to_email],
+                'subject': subject,
+                'html': html_content
+            },
+            timeout=10
+        )
         
-        # Attach HTML content
-        html_part = MIMEText(html_content, 'html')
-        message.attach(html_part)
-        
-        print("🔌 Connecting to Gmail SMTP server...")
-        sys.stdout.flush()
-        
-        # Connect to Gmail SMTP server using port 587 (STARTTLS) instead of 465 (SSL)
-        # Port 587 is more reliable on cloud platforms like Render
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            print("🔐 Starting TLS...")
+        if response.status_code == 200:
+            print(f"✅ Password reset email sent successfully to {to_email}")
+            print(f"📬 Response: {response.json()}")
             sys.stdout.flush()
-            
-            server.starttls()  # Upgrade connection to secure
-            
-            print("🔐 Logging in...")
+            return True
+        else:
+            print(f"❌ Failed to send email. Status: {response.status_code}")
+            print(f"❌ Response: {response.text}")
             sys.stdout.flush()
-            
-            server.login(gmail_user, gmail_app_password)
-            
-            print("📤 Sending email...")
-            sys.stdout.flush()
-            
-            server.send_message(message)
-        
-        print(f"✅ Password reset email sent successfully to {to_email}")
-        sys.stdout.flush()
-        return True
+            raise Exception(f"Resend API error: {response.text}")
         
     except Exception as e:
         print(f"❌ Failed to send email to {to_email}")
@@ -184,4 +174,3 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         print("="*80 + "\n")
         sys.stdout.flush()
         return False
-
