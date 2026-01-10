@@ -1,11 +1,16 @@
 # email_service.py
 import os
 import sys
-import requests
+import base64
+from email.mime.text import MIMEText
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -> bool:
     """
-    Send password reset email using Resend API (HTTP-based, works on all platforms).
+    Send password reset email using Gmail API (HTTP-based, works on all platforms).
     
     Args:
         to_email: Recipient email address
@@ -19,18 +24,20 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
     print(f"🔍 Attempting to send password reset email to: {to_email}")
     sys.stdout.flush()
     
-    # Get Resend API key from environment
-    resend_api_key = os.environ.get('RESEND_API_KEY')
-    from_email = os.environ.get('FROM_EMAIL', 'onboarding@resend.dev')
+    # Get Gmail credentials from environment
+    gmail_user = os.environ.get('GMAIL_USER')
+    gmail_refresh_token = os.environ.get('GMAIL_REFRESH_TOKEN')
+    gmail_client_id = os.environ.get('GMAIL_CLIENT_ID')
+    gmail_client_secret = os.environ.get('GMAIL_CLIENT_SECRET')
     
-    print(f"📧 From email: {from_email}")
-    print(f"🔑 Resend API key: {'SET' if resend_api_key else 'NOT SET'}")
+    print(f"📧 Gmail user: {gmail_user if gmail_user else 'NOT SET'}")
+    print(f"🔑 Gmail credentials: {'SET' if all([gmail_refresh_token, gmail_client_id, gmail_client_secret]) else 'NOT SET'}")
     sys.stdout.flush()
     
-    # If no API key, fall back to console logging
-    if not resend_api_key:
+    # If no credentials, fall back to console logging
+    if not all([gmail_user, gmail_refresh_token, gmail_client_id, gmail_client_secret]):
         print("\n" + "="*80)
-        print("⚠️  RESEND_API_KEY not found - Using console logging")
+        print("⚠️  Gmail API credentials not found - Using console logging")
         print("="*80)
         print(f"To: {to_email}")
         print(f"Reset Link: {reset_link}")
@@ -129,36 +136,58 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
     """
     
     try:
-        print("📨 Sending email via Resend API...")
+        print("📨 Sending email via Gmail API...")
         sys.stdout.flush()
         
-        # Send email using Resend API
-        response = requests.post(
-            'https://api.resend.com/emails',
-            headers={
-                'Authorization': f'Bearer {resend_api_key}',
-                'Content-Type': 'application/json'
-            },
-            json={
-                'from': from_email,
-                'to': [to_email],
-                'subject': subject,
-                'html': html_content
-            },
-            timeout=10
+        # Create credentials from refresh token
+        creds = Credentials(
+            token=None,
+            refresh_token=gmail_refresh_token,
+            token_uri='https://oauth2.googleapis.com/token',
+            client_id=gmail_client_id,
+            client_secret=gmail_client_secret
         )
         
-        if response.status_code == 200:
-            print(f"✅ Password reset email sent successfully to {to_email}")
-            print(f"📬 Response: {response.json()}")
-            sys.stdout.flush()
-            return True
-        else:
-            print(f"❌ Failed to send email. Status: {response.status_code}")
-            print(f"❌ Response: {response.text}")
-            sys.stdout.flush()
-            raise Exception(f"Resend API error: {response.text}")
+        # Refresh the access token
+        creds.refresh(Request())
         
+        # Build Gmail API service
+        service = build('gmail', 'v1', credentials=creds)
+        
+        # Create message
+        message = MIMEText(html_content, 'html')
+        message['to'] = to_email
+        message['from'] = gmail_user
+        message['subject'] = subject
+        
+        # Encode message
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
+        
+        # Send email
+        send_message = service.users().messages().send(
+            userId='me',
+            body={'raw': raw_message}
+        ).execute()
+        
+        print(f"✅ Password reset email sent successfully to {to_email}")
+        print(f"📬 Message ID: {send_message['id']}")
+        sys.stdout.flush()
+        return True
+        
+    except HttpError as error:
+        print(f"❌ Gmail API error: {error}")
+        sys.stdout.flush()
+        
+        # Fall back to console logging
+        print("\n" + "="*80)
+        print("EMAIL SEND FAILED - Showing reset link in console")
+        print("="*80)
+        print(f"To: {to_email}")
+        print(f"Reset Link: {reset_link}")
+        print(f"Expires: {expires_at}")
+        print("="*80 + "\n")
+        sys.stdout.flush()
+        return False
     except Exception as e:
         print(f"❌ Failed to send email to {to_email}")
         print(f"❌ Error details: {type(e).__name__}: {str(e)}")
