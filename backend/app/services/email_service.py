@@ -1,5 +1,6 @@
 # email_service.py
 import os
+import sys
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -17,9 +18,16 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         bool: True if email sent successfully, False otherwise
     """
     
+    print(f"🔍 Attempting to send password reset email to: {to_email}")
+    sys.stdout.flush()
+    
     # Get Gmail credentials from environment
     gmail_user = os.environ.get('GMAIL_USER')
     gmail_app_password = os.environ.get('GMAIL_APP_PASSWORD')
+    
+    print(f"📧 Gmail user: {gmail_user if gmail_user else 'NOT SET'}")
+    print(f"🔑 Gmail password: {'SET' if gmail_app_password else 'NOT SET'}")
+    sys.stdout.flush()
     
     # If no credentials, fall back to console logging
     if not gmail_user or not gmail_app_password:
@@ -30,6 +38,7 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         print(f"Reset Link: {reset_link}")
         print(f"Expires: {expires_at}")
         print("="*80 + "\n")
+        sys.stdout.flush()
         return False
     
     # Create email content
@@ -122,6 +131,9 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
     """
     
     try:
+        print("📨 Creating email message...")
+        sys.stdout.flush()
+        
         # Create message
         message = MIMEMultipart('alternative')
         message['Subject'] = subject
@@ -132,16 +144,30 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         html_part = MIMEText(html_content, 'html')
         message.attach(html_part)
         
+        print("🔌 Connecting to Gmail SMTP server...")
+        sys.stdout.flush()
+        
         # Connect to Gmail SMTP server
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            print("🔐 Logging in...")
+            sys.stdout.flush()
+            
             server.login(gmail_user, gmail_app_password)
+            
+            print("📤 Sending email...")
+            sys.stdout.flush()
+            
             server.send_message(message)
         
-        print(f"✅ Password reset email sent to {to_email}")
+        print(f"✅ Password reset email sent successfully to {to_email}")
+        sys.stdout.flush()
         return True
         
     except Exception as e:
-        print(f"❌ Failed to send email to {to_email}: {str(e)}")
+        print(f"❌ Failed to send email to {to_email}")
+        print(f"❌ Error details: {type(e).__name__}: {str(e)}")
+        sys.stdout.flush()
+        
         # Fall back to console logging
         print("\n" + "="*80)
         print("EMAIL SEND FAILED - Showing reset link in console")
@@ -150,5 +176,6 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
         print(f"Reset Link: {reset_link}")
         print(f"Expires: {expires_at}")
         print("="*80 + "\n")
+        sys.stdout.flush()
         return False
 
