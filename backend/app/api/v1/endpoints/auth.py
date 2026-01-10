@@ -430,3 +430,106 @@ async def reset_password(request: ResetPasswordRequest, db: Session = Depends(ge
     print(f"\n✓ Password successfully reset for user: {user.email}\n")
     
     return {"message": "Password has been reset successfully"}
+
+
+# Google OAuth Models
+class GoogleAuthRequest(BaseModel):
+    credential: str  # Google ID token
+
+class GoogleAuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: dict
+
+@router.post("/google-auth", response_model=GoogleAuthResponse, status_code=status.HTTP_200_OK)
+async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """
+    Authenticate user with Google OAuth.
+    Creates new user if doesn't exist, logs in existing user.
+    """
+    from app.services.google_oauth import verify_google_token
+    from app.models.user import AuthProvider
+    
+    try:
+        # Verify Google token and get user info
+        google_user = verify_google_token(request.credential)
+        
+        print(f"🔍 Google OAuth attempt for: {google_user['email']}")
+        
+        # Check if user exists by email
+        user = db.query(User).filter(User.email == google_user['email'].lower()).first()
+        
+        if user:
+            # Existing user - update Google info if needed
+            print(f"✓ Existing user found: {user.email}")
+            
+            if not user.google_id:
+                user.google_id = google_user['google_id']
+                user.profile_picture = google_user['picture']
+                user.auth_provider = AuthProvider.GOOGLE
+                user.updated_at = datetime.utcnow()
+                db.commit()
+                print(f"✓ Updated user with Google OAuth info")
+        else:
+            # New user - create account
+            print(f"📝 Creating new user from Google OAuth")
+            
+            # Generate username from email
+            username = google_user['email'].split('@')[0]
+            base_username = username
+            counter = 1
+            
+            # Ensure unique username
+            while db.query(User).filter(User.username == username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            user = User(
+                email=google_user['email'].lower(),
+                username=username,
+                full_name=google_user['name'],
+                google_id=google_user['google_id'],
+                profile_picture=google_user['picture'],
+                auth_provider=AuthProvider.GOOGLE,
+                hashed_password=None,  # No password for OAuth users initially
+                is_active=True
+            )
+            
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            
+            print(f"✅ New user created: {user.email}")
+        
+        # Generate JWT token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.email}, expires_delta=access_token_expires
+        )
+        
+        # Return token and user info
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "profile_picture": user.profile_picture,
+                "auth_provider": user.auth_provider.value if user.auth_provider else "email"
+            }
+        }
+        
+    except ValueError as e:
+        print(f"❌ Google OAuth error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid Google credentials: {str(e)}"
+        )
+    except Exception as e:
+        print(f"❌ Unexpected error in Google OAuth: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during Google authentication"
+        )

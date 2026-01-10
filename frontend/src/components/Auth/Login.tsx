@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import LoginVisuals from './LoginVisuals';
 import AuthTabs from './AuthTabs';
 import AnimatedLockIcon from './AnimatedLockIcon';
@@ -175,6 +176,46 @@ const Login: React.FC = () => {
         ease: 'power2.inOut'
       });
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+      const response = await fetch(`${apiUrl}/auth/google-auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          credential: credentialResponse.credential
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Google authentication failed');
+      }
+
+      const data = await response.json();
+
+      // Store token and user data
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Trigger unlock animation
+      setShowUnlockAnimation(true);
+      playUnlockAnimation();
+    } catch (err: any) {
+      setError(err.message || 'Google authentication failed');
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google authentication failed. Please try again.');
   };
 
   return (
@@ -380,6 +421,26 @@ const Login: React.FC = () => {
                 )}
               </button>
 
+              {/* Divider */}
+              <div className="form-item flex items-center gap-4 my-6">
+                <div className="flex-1 h-px bg-white/10"></div>
+                <span className="text-gray-500 text-sm">or</span>
+                <div className="flex-1 h-px bg-white/10"></div>
+              </div>
+
+              {/* Google Sign In */}
+              <div className="form-item flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="filled_black"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                  width="384"
+                />
+              </div>
+
               <p className="form-item text-center text-gray-400 text-sm mt-6">
                 New to TradeZella?{' '}
                 <Link to="/signup" className="text-white font-semibold hover:text-blue-400 transition-colors">
@@ -394,4 +455,20 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+// Wrap with GoogleOAuthProvider
+const LoginWithGoogle = () => {
+  const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+
+  if (!googleClientId) {
+    console.warn('REACT_APP_GOOGLE_CLIENT_ID not set - Google OAuth will not work');
+    return <Login />;
+  }
+
+  return (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <Login />
+    </GoogleOAuthProvider>
+  );
+};
+
+export default LoginWithGoogle;

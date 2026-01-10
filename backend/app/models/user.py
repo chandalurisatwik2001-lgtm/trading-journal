@@ -1,8 +1,13 @@
 # user model
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Float, Enum
+import enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.core.database import Base
+
+class AuthProvider(enum.Enum):
+    EMAIL = "email"
+    GOOGLE = "google"
 
 class User(Base):
     __tablename__ = "users"
@@ -10,10 +15,16 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)  # Optional for OAuth users
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
+    
+    # OAuth fields
+    google_id = Column(String, unique=True, nullable=True, index=True)
+    profile_picture = Column(String, nullable=True)
+    auth_provider = Column(Enum(AuthProvider), default=AuthProvider.EMAIL, nullable=False)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
