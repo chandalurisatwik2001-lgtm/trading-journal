@@ -18,29 +18,27 @@ const AccountBalanceWidget: React.FC<AccountBalanceWidgetProps> = ({ balance, to
     useLayoutEffect(() => {
         const ctx = gsap.context(() => {
             // Animate Balance
-            gsap.from(balanceRef.current, {
-                textContent: 0,
+            const balanceObj = { val: 0 };
+            gsap.to(balanceObj, {
+                val: balance,
                 duration: 2,
                 ease: "power2.out",
-                snap: { textContent: 1 },
-                stagger: 1,
-                onUpdate: function () {
+                onUpdate: () => {
                     if (balanceRef.current) {
-                        balanceRef.current.innerHTML = currency + Number(this.targets()[0].textContent).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        balanceRef.current.innerHTML = currency + balanceObj.val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 }
             });
 
             // Animate P&L
-            gsap.from(pnlRef.current, {
-                textContent: 0,
+            const pnlObj = { val: 0 };
+            gsap.to(pnlObj, {
+                val: totalPnl,
                 duration: 2,
                 ease: "power2.out",
-                snap: { textContent: 1 },
-                onUpdate: function () {
+                onUpdate: () => {
                     if (pnlRef.current) {
-                        const val = Number(this.targets()[0].textContent);
-                        pnlRef.current.innerHTML = (val >= 0 ? '+' : '') + currency + Math.abs(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                        pnlRef.current.innerHTML = (pnlObj.val >= 0 ? '+' : '') + currency + Math.abs(pnlObj.val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 }
             });
