@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { simExchangeAPI, SimPosition } from '../../api/simExchange';
-import { X, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { X, TrendingUp, RefreshCw } from 'lucide-react';
 
 interface PositionsPanelProps {
     refreshTrigger: number;

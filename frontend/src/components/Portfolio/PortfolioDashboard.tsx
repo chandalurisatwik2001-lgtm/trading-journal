@@ -3,7 +3,7 @@ import { portfolioAPI } from '../../api/portfolio';
 import { simExchangeAPI, WalletBalance } from '../../api/simExchange';
 import { analyticsAPI } from '../../api/analytics';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Wallet, TrendingUp, TrendingDown, RefreshCw, RotateCcw, Activity, DollarSign, BarChart2 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, RefreshCw, RotateCcw, Activity, BarChart2 } from 'lucide-react';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316'];
 

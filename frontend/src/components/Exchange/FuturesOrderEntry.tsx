@@ -55,7 +55,7 @@ const FuturesOrderEntry: React.FC<FuturesOrderEntryProps> = ({ symbol, currentPr
 
         setIsLoading(true);
         try {
-            const res = await simExchangeAPI.placeFuturesOrder({
+            await simExchangeAPI.placeFuturesOrder({
                 symbol,
                 side,
                 quantity: qty,
@@ -206,8 +206,8 @@ const FuturesOrderEntry: React.FC<FuturesOrderEntryProps> = ({ symbol, currentPr
             <div className="p-4 border-t border-gray-800">
                 <button onClick={handleSubmit} disabled={isLoading || !qty || margin > availableBalance}
                     className={`w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed ${side === 'LONG'
-                            ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/30 text-white'
-                            : 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-900/30 text-white'
+                        ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/30 text-white'
+                        : 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-900/30 text-white'
                         }`}>
                     {isLoading ? 'Placing...' : `Open ${side} ${baseAsset}`}
                 </button>
