@@ -6,11 +6,10 @@ import OrderEntry from './OrderEntry';
 const ExchangeLayout: React.FC = () => {
     // Current active market
     const [symbol, setSymbol] = useState('BTCUSDT');
-    // For refreshing child components if needed
-    const [refreshKey, setRefreshKey] = useState(0);
-
+    // We use a key on the orderBook to force re-render if needed, or rely on state updates
     const handleOrderSuccess = () => {
-        setRefreshKey(prev => prev + 1);
+        // Option to trigger refetch in children if components are lifted up
+        // Currently handled by OrderEntry self-refreshing its wallet balances
     };
 
     return (
@@ -20,7 +19,7 @@ const ExchangeLayout: React.FC = () => {
                 <div className="flex items-center gap-6">
                     <div className="flex flex-col">
                         <h2 className="text-2xl font-black text-white">{symbol}</h2>
-                        <a href="#" className="text-xs text-blue-400 hover:underline">Simulated Trading</a>
+                        <button className="text-xs text-blue-400 hover:underline">Simulated Trading</button>
                     </div>
                 </div>
 
@@ -31,8 +30,8 @@ const ExchangeLayout: React.FC = () => {
                             key={s}
                             onClick={() => setSymbol(s)}
                             className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${symbol === s
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
-                                    : 'bg-[#16161e] text-gray-400 hover:text-white border border-gray-800'
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
+                                : 'bg-[#16161e] text-gray-400 hover:text-white border border-gray-800'
                                 }`}
                         >
                             {s.replace('USDT', '')}
