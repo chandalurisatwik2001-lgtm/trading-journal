@@ -1,10 +1,9 @@
 import axios from 'axios';
 
-// @ts-ignore
-const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '../config/api';
 
 const apiClient = axios.create({
-    baseURL: `${API_URL}/sim_exchange`,
+    baseURL: `${API_BASE_URL}/sim_exchange`,
     headers: {
         'Content-Type': 'application/json',
     },
