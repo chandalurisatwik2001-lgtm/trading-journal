@@ -18,6 +18,7 @@ import TopBar from './components/Layout/TopBar';
 const ExchangeSettings = React.lazy(() => import('./components/Settings/ExchangeSettings'));
 const ReportsDashboard = React.lazy(() => import('./components/Reports/ReportsDashboard'));
 const ExchangeLayout = React.lazy(() => import('./components/Exchange/ExchangeLayout'));
+const PortfolioDashboard = React.lazy(() => import('./components/Portfolio/PortfolioDashboard'));
 
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -55,6 +56,7 @@ const AppLayout = () => {
                 <Route path="/reports" element={<div className="max-w-7xl mx-auto"><ReportsDashboard /></div>} />
                 <Route path="/settings/exchanges" element={<div className="max-w-7xl mx-auto"><ExchangeSettings /></div>} />
                 <Route path="/exchange" element={<ExchangeLayout />} />
+                <Route path="/portfolio" element={<div className="max-w-7xl mx-auto"><PortfolioDashboard /></div>} />
                 {/* Add other routes as needed */}
               </Routes>
             </Suspense>

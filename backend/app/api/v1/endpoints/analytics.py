@@ -1,15 +1,41 @@
 # analytics endpoint
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.analytics_service import AnalyticsService
+from app.models.user import User
 from datetime import datetime
 from typing import Optional
+from jose import JWTError, jwt
+from app.core.config import settings
 
 router = APIRouter()
 
-def get_current_user_id():
-    return 1
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+def get_current_user_id(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> int:
+    """Extract the real user_id from the JWT token."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user.id
 
 @router.get("/performance")
 def get_performance_metrics(
@@ -74,6 +100,7 @@ def get_calendar_data(
     if month < 1 or month > 12:
         return {"error": "Month must be between 1 and 12"}
     return AnalyticsService.get_calendar_data(db, user_id, year, month)
+
 @router.get("/distribution")
 def get_trade_distribution(
     db: Session = Depends(get_db),

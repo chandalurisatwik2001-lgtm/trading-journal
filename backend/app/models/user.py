@@ -33,6 +33,7 @@ class User(Base):
     onboarding = relationship("UserOnboarding", back_populates="user", uselist=False)
     exchanges = relationship("ExchangeConnection", back_populates="user")
     wallets = relationship("Wallet", back_populates="user")
+    sim_positions = relationship("SimPosition", back_populates="user")
 
 class UserOnboarding(Base):
     __tablename__ = "user_onboarding"

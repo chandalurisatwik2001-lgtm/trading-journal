@@ -3,20 +3,24 @@ import { createChart, IChartApi, ISeriesApi, CandlestickData, Time, CandlestickS
 
 interface CandleChartProps {
     symbol: string;
-    interval: string;
+    interval?: string; // optional external override; internal state takes precedence
 }
 
-const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval }) => {
+const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'];
+
+const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval: externalInterval = '1m' }) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
-    const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+    const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+    const wsRef = useRef<WebSocket | null>(null);
+
+    // Interval is managed internally so buttons work without needing a parent callback
+    const [interval, setInterval] = useState(externalInterval);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Create chart once on mount
     useEffect(() => {
         if (!chartContainerRef.current) return;
-
-        // Ensure container has dimensions
-        const { clientWidth, clientHeight } = chartContainerRef.current;
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
@@ -27,11 +31,9 @@ const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval }) => {
                 vertLines: { color: '#2B2B36' },
                 horzLines: { color: '#2B2B36' },
             },
-            crosshair: {
-                mode: 0,
-            },
-            width: clientWidth,
-            height: clientHeight,
+            crosshair: { mode: 0 },
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight,
         });
 
         const candlestickSeries = chart.addSeries(CandlestickSeries, {
@@ -53,15 +55,33 @@ const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval }) => {
                 });
             }
         };
-
         window.addEventListener('resize', handleResize);
 
-        // Fetch Historical Data
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            chart.remove();
+        };
+    }, []);
+
+    // Reload data whenever symbol or interval changes
+    useEffect(() => {
+        if (!seriesRef.current) return;
+
+        // Close previous WebSocket
+        if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+        }
+
         const fetchKlines = async () => {
             setIsLoading(true);
             try {
-                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=1000`);
+                const res = await fetch(
+                    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=1000`
+                );
                 const data = await res.json();
+
+                if (!Array.isArray(data)) return;
 
                 const formattedData: CandlestickData[] = data.map((d: any) => ({
                     time: (d[0] / 1000) as Time,
@@ -71,9 +91,10 @@ const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval }) => {
                     close: parseFloat(d[4]),
                 }));
 
-                candlestickSeries.setData(formattedData);
+                seriesRef.current?.setData(formattedData);
+                chartRef.current?.timeScale().fitContent();
             } catch (err) {
-                console.error("Failed to fetch klines", err);
+                console.error('Failed to fetch klines', err);
             } finally {
                 setIsLoading(false);
             }
@@ -81,14 +102,14 @@ const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval }) => {
 
         fetchKlines();
 
-        // Optional: Websocket for live updates could go here
-        const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`);
+        // Live WebSocket updates for the current candle
+        const ws = new WebSocket(
+            `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`
+        );
         ws.onmessage = (event) => {
             const message = JSON.parse(event.data);
             const kline = message.k;
-            if (kline.x) return; // ignore closed candles if desired, or just update
-
-            candlestickSeries.update({
+            seriesRef.current?.update({
                 time: (kline.t / 1000) as Time,
                 open: parseFloat(kline.o),
                 high: parseFloat(kline.h),
@@ -96,11 +117,10 @@ const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval }) => {
                 close: parseFloat(kline.c),
             });
         };
+        wsRef.current = ws;
 
         return () => {
-            window.removeEventListener('resize', handleResize);
             ws.close();
-            chart.remove();
         };
     }, [symbol, interval]);
 
@@ -112,11 +132,16 @@ const CandleChart: React.FC<CandleChartProps> = ({ symbol, interval }) => {
                     <span className="font-bold text-white text-lg">{symbol}</span>
                     <span className="text-gray-400 text-sm">Perpetual</span>
                 </div>
+                {/* Interval buttons — onClick updates internal state, re-fetches data */}
                 <div className="flex gap-2">
-                    {['1m', '5m', '15m', '1h', '4h', '1d'].map(t => (
+                    {INTERVALS.map(t => (
                         <button
                             key={t}
-                            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${interval === t ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'}`}
+                            onClick={() => setInterval(t)}
+                            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${interval === t
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                                }`}
                         >
                             {t}
                         </button>
