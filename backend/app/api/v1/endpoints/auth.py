@@ -26,7 +26,7 @@ pwd_context = CryptContext(
 # JWT settings
 SECRET_KEY = "your-secret-key-change-this-in-production-make-it-long-and-random"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 10080  # 7 days
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
