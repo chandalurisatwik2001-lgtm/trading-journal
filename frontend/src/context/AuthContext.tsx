@@ -31,7 +31,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
-      // ✅ FIX: Check if storedUser exists AND is not 'undefined' before parsing
       if (token && storedUser && storedUser !== 'undefined') {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
@@ -39,11 +38,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('Error loading user from storage:', error);
-      // Clear invalid data
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
   }, []);
+
+  // Global 401 handler — redirects to login with session-expired flag
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        const token = localStorage.getItem('token');
+        // Only redirect if the user was previously logged in
+        if (token) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          setIsAuthenticated(false);
+          window.location.href = '/login?expired=true';
+        }
+      }
+      return response;
+    };
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+
 
   const login = async (email: string, password: string) => {
     try {

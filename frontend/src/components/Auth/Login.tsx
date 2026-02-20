@@ -1,23 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle, Sparkles, Clock } from 'lucide-react';
 import gsap from 'gsap';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import LoginVisuals from './LoginVisuals';
 import AuthTabs from './AuthTabs';
 import AnimatedLockIcon from './AnimatedLockIcon';
+import { API_BASE_URL } from '../../config/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const formRef = useRef<HTMLDivElement>(null);
   const lockIconRef = useRef<SVGSVGElement>(null);
@@ -28,11 +31,16 @@ const Login: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Check if session expired
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === 'true') {
+      setSessionExpired(true);
+    }
     // Check if already logged in
     if (localStorage.getItem('token')) {
       navigate('/dashboard');
     }
-  }, [navigate]);
+  }, [navigate, location.search]);
 
   useEffect(() => {
     // Entry Animation
@@ -183,8 +191,7 @@ const Login: React.FC = () => {
       setLoading(true);
       setError('');
 
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
-      const response = await fetch(`${apiUrl}/auth/google-auth`, {
+      const response = await fetch(`${API_BASE_URL}/auth/google-auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -315,6 +322,14 @@ const Login: React.FC = () => {
 
           <div ref={formRef} className="max-w-md w-full relative z-10">
             <AuthTabs />
+
+            {/* Session Expired Banner */}
+            {sessionExpired && (
+              <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm flex items-center gap-2">
+                <Clock className="w-4 h-4 shrink-0" />
+                <span>Your session expired. Please log in again to continue.</span>
+              </div>
+            )}
 
             {/* Header with Animated Lock */}
             <div className="text-center mb-6 form-item">
