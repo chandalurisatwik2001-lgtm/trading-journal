@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { format } from 'date-fns';
+import React, { useEffect, useState, useCallback } from 'react';
 import { API_BASE_URL } from '../../config/api';
 import WidgetLibrary, { WidgetType } from './Widgets/WidgetLibrary';
 import AccountBalanceWidget from './Widgets/AccountBalanceWidget';
@@ -79,11 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
     localStorage.setItem('dashboard_widgets', JSON.stringify(activeWidgets));
   }, [activeWidgets]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
@@ -115,13 +110,13 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadExchangeData();
   }, []);
 
-  const loadExchangeData = async () => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const loadExchangeData = useCallback(async () => {
     try {
       const connections = await exchangesAPI.getStatus();
       const activeConn = connections.find(c => c.is_active);
@@ -180,7 +175,11 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
     } catch (err) {
       console.error("Failed to load exchange status", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadExchangeData();
+  }, [loadExchangeData]);
 
   const setEmptyDefaults = () => {
     setMetrics({

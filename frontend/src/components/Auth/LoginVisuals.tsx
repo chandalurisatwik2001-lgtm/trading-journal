@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { Shield, Lock, Activity, Globe, Server, Wifi } from 'lucide-react';
+import { Shield, Lock, Globe, Server } from 'lucide-react';
 
 const LoginVisuals: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -97,11 +97,11 @@ const LoginVisuals: React.FC = () => {
                                     <div key={idx} className="flex items-start gap-3 text-xs font-mono opacity-80 hover:opacity-100 transition-opacity">
                                         <span className="text-gray-500 shrink-0">[{log.time}]</span>
                                         <span className={`shrink-0 font-bold ${log.type === 'INFO' ? 'text-blue-400' :
-                                                log.type === 'SECURE' ? 'text-purple-400' :
-                                                    log.type === 'DATA' ? 'text-cyan-400' :
-                                                        log.type === 'SUCCESS' ? 'text-green-400' :
-                                                            log.type === 'WARN' ? 'text-yellow-400' :
-                                                                'text-gray-300'
+                                            log.type === 'SECURE' ? 'text-purple-400' :
+                                                log.type === 'DATA' ? 'text-cyan-400' :
+                                                    log.type === 'SUCCESS' ? 'text-green-400' :
+                                                        log.type === 'WARN' ? 'text-yellow-400' :
+                                                            'text-gray-300'
                                             }`}>{log.type}</span>
                                         <span className="text-gray-300 truncate">{log.msg}</span>
                                     </div>

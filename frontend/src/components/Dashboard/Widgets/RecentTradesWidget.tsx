@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart2, TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import WidgetContainer from './WidgetContainer';
 import { format } from 'date-fns';
 
