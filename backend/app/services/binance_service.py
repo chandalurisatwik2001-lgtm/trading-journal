@@ -70,38 +70,66 @@ class BinanceService:
 
 
     def validate_connection(self) -> tuple[bool, str]:
+        """
+        Validate API credentials. 
+        For testnet, Binance's public endpoints are geo-blocked on many server IPs.
+        We attempt validation but allow saving keys even if the public ping fails,
+        since the real validation happens on the first data fetch.
+        """
         try:
-            # Bypass CCXT completely and use direct HTTP request to exchangeInfo
-            # This avoids all margin endpoint calls that CCXT makes internally
             import requests
+            import hmac
+            import hashlib
+            import time
             
-            if self.client.options['defaultType'] == 'future':
-                base_url = self.client.urls['api']['fapiPublic']
+            account_type = self.client.options.get('defaultType', 'spot')
+            
+            if account_type == 'future':
+                base_domain = self.client.urls['api']['fapiPrivate'].split('/fapi')[0]
+                # Use a lightweight private endpoint that requires auth — this proves keys are valid
+                timestamp = int(time.time() * 1000)
+                params = f'timestamp={timestamp}'
+                signature = hmac.new(
+                    self.client.secret.encode('utf-8'),
+                    params.encode('utf-8'),
+                    hashlib.sha256
+                ).hexdigest()
+                url = f"{base_domain}/fapi/v2/balance?{params}&signature={signature}"
+                headers = {'X-MBX-APIKEY': self.client.apiKey}
+                print(f"Validating connection via balance endpoint: {url}")
+                response = requests.get(url, headers=headers, timeout=15)
             else:
-                base_url = self.client.urls['api']['public']
+                base_domain = self.client.urls['api']['private'].split('/api')[0]
+                timestamp = int(time.time() * 1000)
+                params = f'timestamp={timestamp}'
+                signature = hmac.new(
+                    self.client.secret.encode('utf-8'),
+                    params.encode('utf-8'),
+                    hashlib.sha256
+                ).hexdigest()
+                url = f"{base_domain}/api/v3/account?{params}&signature={signature}"
+                headers = {'X-MBX-APIKEY': self.client.apiKey}
+                print(f"Validating connection via account endpoint: {url}")
+                response = requests.get(url, headers=headers, timeout=15)
             
-            url = f"{base_url}/exchangeInfo"
-            print(f"Validating connection to: {url}")
-            
-            response = requests.get(url, timeout=10)
+            print(f"Validation response: HTTP {response.status_code}: {response.text[:300]}")
             
             if response.status_code == 200:
                 print("Connection validation successful!")
                 return True, ""
+            elif response.status_code in [401, 403]:
+                return False, "Invalid API key or secret. Please check your credentials."
             else:
-                return False, f"Connection failed: HTTP {response.status_code}"
+                # For geo-blocks (451) or other server-side errors, allow the connection
+                # The keys will be tested on the next sync
+                print(f"Validation returned HTTP {response.status_code}. Allowing connection.")
+                return True, ""
                 
         except Exception as e:
             error_msg = str(e)
-            print(f"Connection validation failed: {error_msg}")
-            
-            if "451" in error_msg or "Service unavailable from a restricted location" in error_msg:
-                return False, (
-                    "Connection Blocked: The Render server is located in the US, which Binance blocks. "
-                    "Please use the 'Use Testnet' option with Testnet keys, or host your backend in a non-US region."
-                )
-            
-            return False, f"Connection failed: {error_msg}"
+            print(f"Connection validation exception: {error_msg}")
+            # Don't block the user if there's a network-level failure — allow saving keys
+            return True, ""
 
     def fetch_trades(self, symbol: str = None, limit: int = 1000) -> List[Dict[str, Any]]:
         try:
