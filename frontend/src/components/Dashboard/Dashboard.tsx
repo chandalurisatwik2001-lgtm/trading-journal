@@ -149,15 +149,48 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
             totalBalance = parseFloat(balanceData.balance.totalWalletBalance);
           }
 
-          // Fallback if we can't parse perfectly but it has an array somewhere
-          if (totalBalance === 0 && balanceData.balance) {
-            const arr = Array.isArray(balanceData.balance) ? balanceData.balance :
-              (Array.isArray(balanceData.balance.balances) ? balanceData.balance.balances : []);
+          // Aggressive Fallback parsing
+          if (totalBalance === 0) {
+            let usdtVal = 0;
 
-            const usdt = arr.find((b: any) => b.asset === 'USDT');
-            if (usdt) {
-              totalBalance = parseFloat(usdt.balance || usdt.free || 0);
-            }
+            // Helper function to recursively search for USDT balance
+            const findUsdtBalance = (obj: any): number => {
+              if (!obj) return 0;
+
+              // If it's the exact object
+              if (obj.asset === 'USDT' || obj.coin === 'USDT') {
+                return parseFloat(obj.balance || obj.free || obj.availableBalance || '0');
+              }
+
+              // If it's an array, search elements
+              if (Array.isArray(obj)) {
+                for (const item of obj) {
+                  const val = findUsdtBalance(item);
+                  if (val > 0) return val;
+                }
+              }
+
+              // If it's an object with keys, search its values
+              if (typeof obj === 'object') {
+                // Quick check if totalWalletBalance exists anywhere
+                if (obj.totalWalletBalance) {
+                  return parseFloat(obj.totalWalletBalance);
+                }
+                if (obj.totalMarginBalance) {
+                  return parseFloat(obj.totalMarginBalance);
+                }
+
+                for (const key of Object.keys(obj)) {
+                  const val = findUsdtBalance(obj[key]);
+                  if (val > 0) return val;
+                }
+              }
+
+              return 0;
+            };
+
+            usdtVal = findUsdtBalance(balanceData);
+            totalBalance = usdtVal;
           }
 
           console.log("Parsed Total Balance (USDT):", totalBalance);
