@@ -1,1 +1,4 @@
 node_modules
+backend/*.db
+**/__pycache__/
+frontend/.env
