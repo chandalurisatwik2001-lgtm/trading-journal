@@ -3,7 +3,7 @@ Google OAuth verification service
 """
 from google.oauth2 import id_token
 from google.auth.transport import requests
-import os
+from app.core.config import settings
 
 def verify_google_token(token: str) -> dict:
     """
@@ -19,8 +19,8 @@ def verify_google_token(token: str) -> dict:
         ValueError: If token is invalid
     """
     try:
-        # Get Google Client ID from environment
-        client_id = os.environ.get('GOOGLE_CLIENT_ID')
+        # Get Google Client ID from settings
+        client_id = settings.GOOGLE_CLIENT_ID
         
         if not client_id:
             raise ValueError("GOOGLE_CLIENT_ID not configured")
