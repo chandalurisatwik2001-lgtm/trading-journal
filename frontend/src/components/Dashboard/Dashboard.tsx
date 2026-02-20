@@ -129,32 +129,38 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
 
           let totalBalance = 0;
 
+          console.log("Exchange Balance Data:", balanceData);
+
           if (Array.isArray(balanceData.balance)) {
-            // Futures: list of assets. Find USDT and get balance, or sum USD value
-            // Simplified: look for USDT
+            // Futures: list of assets from /fapi/v2/balance
             const usdt = balanceData.balance.find((b: any) => b.asset === 'USDT');
             if (usdt) {
+              // Futures balance includes balance + crossUnPnl
               totalBalance = parseFloat(usdt.balance);
             }
           } else if (balanceData.balance && balanceData.balance.balances) {
-            // Spot
-            // Simplified
-            totalBalance = 0;
+            // Spot: object from /api/v3/account with balances array
+            const usdt = balanceData.balance.balances.find((b: any) => b.asset === 'USDT');
+            if (usdt) {
+              totalBalance = parseFloat(usdt.free) + parseFloat(usdt.locked);
+            }
+          } else if (balanceData.balance && balanceData.balance.totalWalletBalance) {
+            // Another common futures API response format
+            totalBalance = parseFloat(balanceData.balance.totalWalletBalance);
           }
 
-          // Fallback if we can't parse perfectly, or if it's a simple structure
+          // Fallback if we can't parse perfectly but it has an array somewhere
           if (totalBalance === 0 && balanceData.balance) {
-            // Try to find any field that looks like total balance
-            // Futures often has 'totalWalletBalance' in the account info if we fetched that
-            // But fetch_balance returns list for futures in v2
+            const arr = Array.isArray(balanceData.balance) ? balanceData.balance :
+              (Array.isArray(balanceData.balance.balances) ? balanceData.balance.balances : []);
 
-            // If it's the list from /fapi/v2/balance:
-            // [{"accountAlias":"...","asset":"USDT","balance":"10884.65",...}]
-            if (Array.isArray(balanceData.balance)) {
-              const usdt = balanceData.balance.find((b: any) => b.asset === 'USDT');
-              if (usdt) totalBalance = parseFloat(usdt.balance);
+            const usdt = arr.find((b: any) => b.asset === 'USDT');
+            if (usdt) {
+              totalBalance = parseFloat(usdt.balance || usdt.free || 0);
             }
           }
+
+          console.log("Parsed Total Balance (USDT):", totalBalance);
 
           if (totalBalance > 0) {
             setExchangeBalance(totalBalance);
