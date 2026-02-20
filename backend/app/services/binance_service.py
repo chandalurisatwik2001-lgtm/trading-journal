@@ -80,7 +80,7 @@ class BinanceService:
             else:
                 base_url = self.client.urls['api']['public']
             
-            url = f"{base_domain}/exchangeInfo"
+            url = f"{base_url}/exchangeInfo"
             print(f"Validating connection to: {url}")
             
             response = requests.get(url, timeout=10)
