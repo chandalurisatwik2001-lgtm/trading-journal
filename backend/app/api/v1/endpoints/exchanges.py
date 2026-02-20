@@ -99,22 +99,19 @@ def sync_trades(
     api_key = decrypt_string(conn.api_key_encrypted)
     api_secret = decrypt_string(conn.api_secret_encrypted)
     
-    # Fetch trades
-    account_type = getattr(conn, 'account_type', 'spot')  # Default to spot for old records
+    account_type = getattr(conn, 'account_type', 'spot')
     service = BinanceService(api_key, api_secret, conn.is_testnet, account_type)
+    
+    count = 0
+    balance = None
+    positions = []
+    sync_errors = []
+
+    # Fetch trades — catch errors gracefully
     try:
-        # Fetching for major pairs for demo purposes
-        # In a real app, we'd iterate known symbols or fetch all orders
         fetched_trades = service.fetch_trades()
-        
-        count = 0
         for t_data in fetched_trades:
-            # Check if trade already exists (simple check by external_id if we had it, 
-            # but for now we'll just add them. In prod, need deduplication)
-            
-            # Map direction: 'buy' -> LONG, 'sell' -> SHORT
             direction = "LONG" if t_data['direction'] == "BUY" else "SHORT"
-            
             trade = Trade(
                 user_id=current_user.id,
                 symbol=t_data['symbol'],
@@ -129,22 +126,33 @@ def sync_trades(
             )
             db.add(trade)
             count += 1
-            
         db.commit()
-        
-        # Also fetch balance and positions
-        balance = service.fetch_balance()
-        positions = service.fetch_positions()
-        
-        return {
-            "message": f"Synced {count} trades successfully",
-            "trades_count": count,
-            "balance": balance,
-            "positions": positions
-        }
-        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+        sync_errors.append(f"Trade fetch skipped: {str(e)}")
+        print(f"Trade fetch error (non-fatal): {e}")
+
+    # Fetch balance — catch errors gracefully
+    try:
+        balance = service.fetch_balance()
+    except Exception as e:
+        sync_errors.append(f"Balance fetch skipped: {str(e)}")
+        print(f"Balance fetch error (non-fatal): {e}")
+
+    # Fetch positions — catch errors gracefully
+    try:
+        positions = service.fetch_positions()
+    except Exception as e:
+        sync_errors.append(f"Position fetch skipped: {str(e)}")
+        print(f"Position fetch error (non-fatal): {e}")
+
+    return {
+        "message": f"Synced {count} trades successfully",
+        "trades_count": count,
+        "balance": balance,
+        "positions": positions,
+        "warnings": sync_errors if sync_errors else None
+    }
+
 
 @router.get("/{exchange_id}/balance")
 def get_balance(
