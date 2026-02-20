@@ -17,6 +17,8 @@ import TopBar from './components/Layout/TopBar';
 // Lazy load new components to prevent bundle crashes
 const ExchangeSettings = React.lazy(() => import('./components/Settings/ExchangeSettings'));
 const ReportsDashboard = React.lazy(() => import('./components/Reports/ReportsDashboard'));
+const ExchangeLayout = React.lazy(() => import('./components/Exchange/ExchangeLayout'));
+
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -41,15 +43,18 @@ const AppLayout = () => {
 
         {/* Scrollable Page Content */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative z-10 custom-scrollbar">
-          <div className="max-w-7xl mx-auto p-6">
+          <div className="w-full h-full p-6">
             <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading...</div>}>
               <Routes>
-                <Route path="/" element={<Dashboard showLibrary={showWidgetLibrary} setShowLibrary={setShowWidgetLibrary} />} />
-                <Route path="/trades" element={<TradeList />} />
-                <Route path="/new-trade" element={<TradeEntryForm />} />
-                <Route path="/calendar" element={<CalendarView />} />
-                <Route path="/reports" element={<ReportsDashboard />} />
-                <Route path="/settings/exchanges" element={<ExchangeSettings />} />
+                <Route path="/" element={
+                  <div className="max-w-7xl mx-auto"><Dashboard showLibrary={showWidgetLibrary} setShowLibrary={setShowWidgetLibrary} /></div>
+                } />
+                <Route path="/trades" element={<div className="max-w-7xl mx-auto"><TradeList /></div>} />
+                <Route path="/new-trade" element={<div className="max-w-7xl mx-auto"><TradeEntryForm /></div>} />
+                <Route path="/calendar" element={<div className="max-w-7xl mx-auto"><CalendarView /></div>} />
+                <Route path="/reports" element={<div className="max-w-7xl mx-auto"><ReportsDashboard /></div>} />
+                <Route path="/settings/exchanges" element={<div className="max-w-7xl mx-auto"><ExchangeSettings /></div>} />
+                <Route path="/exchange" element={<ExchangeLayout />} />
                 {/* Add other routes as needed */}
               </Routes>
             </Suspense>

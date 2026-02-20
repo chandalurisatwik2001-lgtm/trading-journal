@@ -14,7 +14,8 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Plus
+    Plus,
+    Activity
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../utils/cn'; // We'll need to create this utility
@@ -42,6 +43,7 @@ const Sidebar = () => {
     ];
 
     const toolsItems = [
+        { icon: Activity, label: 'Exchange', path: '/dashboard/exchange', badge: 'LIVE' },
         { icon: Calendar, label: 'Calendar', path: '/dashboard/calendar' },
         { icon: BarChart2, label: 'Progress', path: '/dashboard/progress-tracker' },
         { icon: PlayCircle, label: 'Replay', path: '/dashboard/trade-replay' },

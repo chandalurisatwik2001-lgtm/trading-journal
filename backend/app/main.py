@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.api.v1.endpoints import auth, analytics, trades, users, exchanges
+from app.api.v1.endpoints import auth, analytics, trades, users, exchanges, sim_exchange
 from app.core.database import engine, Base
-from app.models import Trade, User, UserOnboarding, ExchangeConnection, PasswordResetToken  # Add all models
+from app.models import Trade, User, UserOnboarding, ExchangeConnection, PasswordResetToken, Wallet
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -61,6 +61,7 @@ app.include_router(analytics.router, prefix="/api/v1/metrics", tags=["analytics"
 app.include_router(trades.router, prefix="/api/v1/trades", tags=["trades"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(exchanges.router, prefix="/api/v1/exchanges", tags=["exchanges"])
+app.include_router(sim_exchange.router, prefix="/api/v1/sim_exchange", tags=["simulated_exchange"])
 
 
 @app.get("/")
