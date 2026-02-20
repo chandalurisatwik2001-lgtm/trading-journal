@@ -7,6 +7,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from app.core.config import settings
 
 def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -> bool:
     """
@@ -24,11 +25,11 @@ def send_password_reset_email(to_email: str, reset_link: str, expires_at: str) -
     print(f"🔍 Attempting to send password reset email to: {to_email}")
     sys.stdout.flush()
     
-    # Get Gmail credentials from environment
-    gmail_user = os.environ.get('GMAIL_USER')
-    gmail_refresh_token = os.environ.get('GMAIL_REFRESH_TOKEN')
-    gmail_client_id = os.environ.get('GMAIL_CLIENT_ID')
-    gmail_client_secret = os.environ.get('GMAIL_CLIENT_SECRET')
+    # Get Gmail credentials from settings
+    gmail_user = settings.GMAIL_USER
+    gmail_refresh_token = settings.GMAIL_REFRESH_TOKEN
+    gmail_client_id = settings.GMAIL_CLIENT_ID
+    gmail_client_secret = settings.GMAIL_CLIENT_SECRET
     
     print(f"📧 Gmail user: {gmail_user if gmail_user else 'NOT SET'}")
     print(f"🔑 Gmail credentials: {'SET' if all([gmail_refresh_token, gmail_client_id, gmail_client_secret]) else 'NOT SET'}")

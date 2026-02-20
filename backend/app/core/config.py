@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
     
+    # Gmail API (for password reset)
+    GMAIL_USER: str = ""
+    GMAIL_REFRESH_TOKEN: str = ""
+    GMAIL_CLIENT_ID: str = ""
+    GMAIL_CLIENT_SECRET: str = ""
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
