@@ -14,6 +14,8 @@ import CalendarWidget from './Widgets/CalendarWidget';
 import ProgressTrackerWidget from './Widgets/ProgressTrackerWidget';
 import ReportWidget from './Widgets/ReportWidget';
 import ExternalLinksWidget from './Widgets/ExternalLinksWidget';
+import LivePriceChartWidget from './Widgets/LivePriceChartWidget';
+import LiveMarketWidget from './Widgets/LiveMarketWidget';
 import { DollarSign, TrendingUp, BarChart2, Activity } from 'lucide-react';
 import { exchangesAPI } from '../../api/exchanges';
 
@@ -503,6 +505,22 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
               case 'external_links':
                 return (
                   <ExternalLinksWidget
+                    key={widgetId}
+                    onRemove={() => handleRemoveWidget(widgetId)}
+                  />
+                );
+
+              // --- Live Market ---
+              case 'live_price_chart':
+                return (
+                  <LivePriceChartWidget
+                    key={widgetId}
+                    onRemove={() => handleRemoveWidget(widgetId)}
+                  />
+                );
+              case 'live_market':
+                return (
+                  <LiveMarketWidget
                     key={widgetId}
                     onRemove={() => handleRemoveWidget(widgetId)}
                   />

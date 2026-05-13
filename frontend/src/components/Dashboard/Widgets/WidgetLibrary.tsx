@@ -32,7 +32,10 @@ export type WidgetType =
     | 'progress_tracker'
     | 'report_widget'
     // Utility
-    | 'external_links';
+    | 'external_links'
+    // Live Market
+    | 'live_price_chart'
+    | 'live_market';
 
 export interface WidgetDefinition {
     id: WidgetType;
@@ -234,6 +237,24 @@ export const AVAILABLE_WIDGETS: WidgetDefinition[] = [
         icon: <Activity size={20} />,
         previewColor: 'bg-slate-500',
         category: 'Utility'
+    },
+
+    // Live Market
+    {
+        id: 'live_price_chart',
+        title: 'Live Price Chart',
+        description: 'Real-time price chart for BTC, ETH, BNB, SOL and more.',
+        icon: <TrendingUp size={20} />,
+        previewColor: 'bg-orange-500',
+        category: 'Live Market'
+    },
+    {
+        id: 'live_market',
+        title: 'Live Market Ticker',
+        description: 'Live streaming prices and % changes for top crypto assets.',
+        icon: <Activity size={20} />,
+        previewColor: 'bg-green-600',
+        category: 'Live Market'
     }
 ];
 
