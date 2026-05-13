@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ wsStatus }) => {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 text-sm text-[#A0A0A0]">
           <User size={14} />
-          <span data-testid="user-name">{user && typeof user === 'object' ? user.name || user.email : ''}</span>
+          <span data-testid="user-name">{user && typeof user === 'object' ? user.full_name || user.username || user.email : ''}</span>
         </div>
         <button
           data-testid="logout-button"

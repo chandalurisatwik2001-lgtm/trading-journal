@@ -14,7 +14,6 @@ import CalendarWidget from './Widgets/CalendarWidget';
 import ProgressTrackerWidget from './Widgets/ProgressTrackerWidget';
 import ReportWidget from './Widgets/ReportWidget';
 import ExternalLinksWidget from './Widgets/ExternalLinksWidget';
-import LivePriceChartWidget from './Widgets/LivePriceChartWidget';
 import LiveMarketWidget from './Widgets/LiveMarketWidget';
 import LiveMarketTicker from './Widgets/LiveMarketTicker';
 import LivePriceChart from './Widgets/LivePriceChart';

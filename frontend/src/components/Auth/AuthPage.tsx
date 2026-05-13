@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Lock, Mail, User, ArrowRight, Activity } from 'lucide-react';
 
 const AuthPage: React.FC = () => {
-  const { login, register } = useAuth();
+  const { login, signup } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +19,7 @@ const AuthPage: React.FC = () => {
       if (isLogin) {
         await login(email, password);
       } else {
-        await register(email, password, name);
+        await signup(email, email, password, name); // Using email as username for now
       }
     } catch (err: any) {
       setError(err.message);
