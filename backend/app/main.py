@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+import asyncio
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.api.v1.endpoints import auth, analytics, trades, users, exchanges, sim_exchange, portfolio
 from app.core.database import engine, Base
 from app.models import Trade, User, UserOnboarding, ExchangeConnection, PasswordResetToken, Wallet, SimPosition
+from app.websocket import manager, price_broadcast_loop, get_initial_data, send_notification, price_cache, notifications_log
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,17 +32,19 @@ async def lifespan(app: FastAPI):
             print("\n" + "="*80)
             print("CRITICAL DATABASE CONNECTION ERROR: Tenant or user not found")
             print("="*80)
-            print("You are likely connecting to the Supabase Transaction Pooler (port 6543).")
-            print("For the Transaction Pooler, your database username must include the project prefix.")
-            print("Example: 'postgres.yourprojectid' instead of just 'postgres'.")
-            print("Please update your DATABASE_URL environment variable in Render.")
-            print("="*80 + "\n")
-        raise e
+            raise e
             
     print("Database tables created successfully")
+
+    # Start real-time price broadcast
+    broadcast_task = asyncio.create_task(price_broadcast_loop())
+    print("Real-time WebSocket price feed started")
+
     yield
-    # Shutdown: cleanup if needed
-    pass
+
+    # Shutdown
+    broadcast_task.cancel()
+    print("WebSocket broadcast stopped")
 
 app = FastAPI(title="TradeZella API", version="1.0.0", lifespan=lifespan)
 
@@ -67,9 +71,39 @@ app.include_router(portfolio.router, prefix="/api/v1/portfolio", tags=["portfoli
 
 @app.get("/")
 async def root():
-    return {"message": "TradeZella API is running"}
+    return {"message": "TradeZella API is running", "version": "2.0.0", "realtime": True}
 
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "ws_connections": len(manager.active_connections)}
+
+
+# ─── WebSocket Endpoint ───
+@app.websocket("/api/v1/ws/prices")
+async def websocket_prices(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        # Send initial snapshot
+        await websocket.send_json(get_initial_data())
+        while True:
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_json({"type": "pong"})
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception:
+        manager.disconnect(websocket)
+
+
+# ─── Live Price REST endpoints (fallback for non-WS clients) ───
+@app.get("/api/v1/prices/live")
+async def get_live_prices():
+    from app.websocket import price_cache as pc
+    return {"prices": list(pc.values())}
+
+
+@app.get("/api/v1/notifications")
+async def get_notifications():
+    from app.websocket import notifications_log as nl
+    return {"notifications": nl[:30]}

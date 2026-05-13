@@ -1,84 +1,161 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API_BASE_URL } from '../config/api';
+
 import axios from 'axios';
 
-const API = process.env.REACT_APP_BACKEND_URL;
-
 interface User {
-  id: string;
+  id: number;
   email: string;
-  name: string;
-  role: string;
+  username: string;
+  full_name?: string;
 }
 
 interface AuthContextType {
-  user: User | null | false;
+  user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => Promise<void>;
+  signup: (email: string, username: string, password: string, fullName?: string) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => useContext(AuthContext);
+// AXIOS Global Interceptor for 401s
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login?expired=true';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
-function formatApiErrorDetail(detail: any): string {
-  if (detail == null) return "Something went wrong. Please try again.";
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail))
-    return detail.map((e: any) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e))).filter(Boolean).join(" ");
-  if (detail && typeof detail.msg === "string") return detail.msg;
-  return String(detail);
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null | false>(null);
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const checkAuth = useCallback(async () => {
+  useEffect(() => {
     try {
-      const { data } = await axios.get(`${API}/api/auth/me`, { withCredentials: true });
-      setUser(data);
-    } catch {
-      setUser(false);
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      if (token && storedUser && storedUser !== 'undefined') {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error('Error loading user from storage:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
   }, []);
 
+  // Global 401 handler — redirects to login with session-expired flag
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        const token = localStorage.getItem('token');
+        // Only redirect if the user was previously logged in
+        if (token) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          setIsAuthenticated(false);
+          window.location.href = '/login?expired=true';
+        }
+      }
+      return response;
+    };
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+
 
   const login = async (email: string, password: string) => {
     try {
-      const { data } = await axios.post(`${API}/api/auth/login`, { email, password }, { withCredentials: true });
-      setUser(data);
-    } catch (e: any) {
-      throw new Error(formatApiErrorDetail(e.response?.data?.detail) || e.message);
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw error;
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, username: string, password: string, fullName?: string) => {
     try {
-      const { data } = await axios.post(`${API}/api/auth/register`, { email, password, name }, { withCredentials: true });
-      setUser(data);
-    } catch (e: any) {
-      throw new Error(formatApiErrorDetail(e.response?.data?.detail) || e.message);
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+          full_name: fullName
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw error;
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
     }
   };
 
-  const logout = async () => {
-    try {
-      await axios.post(`${API}/api/auth/logout`, {}, { withCredentials: true });
-    } catch {}
-    setUser(false);
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
