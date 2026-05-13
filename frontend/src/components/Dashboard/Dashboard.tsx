@@ -16,6 +16,9 @@ import ReportWidget from './Widgets/ReportWidget';
 import ExternalLinksWidget from './Widgets/ExternalLinksWidget';
 import LivePriceChartWidget from './Widgets/LivePriceChartWidget';
 import LiveMarketWidget from './Widgets/LiveMarketWidget';
+import LiveMarketTicker from './Widgets/LiveMarketTicker';
+import LivePriceChart from './Widgets/LivePriceChart';
+import LiveNotifications from './Widgets/LiveNotifications';
 import { DollarSign, TrendingUp, BarChart2, Activity } from 'lucide-react';
 import { exchangesAPI } from '../../api/exchanges';
 
@@ -59,11 +62,14 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
   // Default widgets - Reordered for priority
   const DEFAULT_WIDGETS: WidgetType[] = [
     'account_balance_pnl',
+    'live_market_ticker',
     'daily_net_cumulative_pnl', // Performance Curve
     'zella_score',
     'net_pnl',
+    'live_price_chart',
     'profit_factor',
     'trade_win_percent',
+    'live_notifications',
     'calendar',
     'recent_trades_open_positions',
     'avg_win_loss',
@@ -317,6 +323,10 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
             spanClass = "col-span-1 md:col-span-2 lg:col-span-2 row-span-2";
           } else if (['recent_trades_open_positions', 'progress_tracker'].includes(widgetId)) {
             spanClass = "col-span-1 md:col-span-2 row-span-1";
+          } else if (widgetId === 'live_price_chart') {
+            spanClass = "col-span-1 md:col-span-2 lg:col-span-2 row-span-2";
+          } else if (widgetId === 'live_market_ticker' || widgetId === 'live_notifications') {
+            spanClass = "col-span-1 row-span-2";
           }
 
           const renderWidget = () => {
@@ -510,14 +520,7 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
                   />
                 );
 
-              // --- Live Market ---
-              case 'live_price_chart':
-                return (
-                  <LivePriceChartWidget
-                    key={widgetId}
-                    onRemove={() => handleRemoveWidget(widgetId)}
-                  />
-                );
+              // --- Live Market (Legacy) ---
               case 'live_market':
                 return (
                   <LiveMarketWidget
@@ -533,6 +536,29 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
                     key={widgetId}
                     currentDayStreak={currentDayStreak}
                     currentTradeStreak={currentTradeStreak}
+                    onRemove={() => handleRemoveWidget(widgetId)}
+                  />
+                );
+
+              // --- Real-time Widgets ---
+              case 'live_market_ticker':
+                return (
+                  <LiveMarketTicker
+                    key={widgetId}
+                    onRemove={() => handleRemoveWidget(widgetId)}
+                  />
+                );
+              case 'live_price_chart':
+                return (
+                  <LivePriceChart
+                    key={widgetId}
+                    onRemove={() => handleRemoveWidget(widgetId)}
+                  />
+                );
+              case 'live_notifications':
+                return (
+                  <LiveNotifications
+                    key={widgetId}
                     onRemove={() => handleRemoveWidget(widgetId)}
                   />
                 );

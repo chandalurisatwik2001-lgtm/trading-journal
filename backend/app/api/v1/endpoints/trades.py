@@ -43,7 +43,18 @@ async def create_trade(
     current_user: dict = Depends(get_current_user)
 ):
     """Create a new trade"""
-    return TradeService.create_trade(db, trade, current_user["id"])
+    result = TradeService.create_trade(db, trade, current_user["id"])
+    # Send real-time notification
+    try:
+        from app.websocket import send_notification
+        await send_notification(
+            f"New {trade.direction} trade opened: {trade.symbol} @ ${trade.entry_price:.2f}",
+            level="info",
+            source="trade-engine"
+        )
+    except Exception:
+        pass
+    return result
 
 
 @router.get("/", response_model=List[TradeResponse])

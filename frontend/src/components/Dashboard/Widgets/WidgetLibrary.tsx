@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, BarChart2, TrendingUp, TrendingDown, Activity, DollarSign, Calendar } from 'lucide-react';
+import { X, BarChart2, TrendingUp, TrendingDown, Activity, DollarSign, Calendar, Wifi, LineChart, Bell } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 
 export type WidgetType =
@@ -33,9 +33,11 @@ export type WidgetType =
     | 'report_widget'
     // Utility
     | 'external_links'
-    // Live Market
+    // Live Market / Real-time
+    | 'live_market_ticker'
     | 'live_price_chart'
-    | 'live_market';
+    | 'live_market'
+    | 'live_notifications';
 
 export interface WidgetDefinition {
     id: WidgetType;
@@ -239,22 +241,38 @@ export const AVAILABLE_WIDGETS: WidgetDefinition[] = [
         category: 'Utility'
     },
 
-    // Live Market
+    // Real-time (Live)
+    {
+        id: 'live_market_ticker',
+        title: 'Live Market Ticker',
+        description: 'Real-time crypto prices via WebSocket. Updates every 10 seconds.',
+        icon: <Wifi size={20} />,
+        previewColor: 'bg-green-500',
+        category: 'Real-time'
+    },
     {
         id: 'live_price_chart',
         title: 'Live Price Chart',
-        description: 'Real-time price chart for BTC, ETH, BNB, SOL and more.',
-        icon: <TrendingUp size={20} />,
+        description: 'Interactive real-time price chart for multiple cryptocurrencies.',
+        icon: <LineChart size={20} />,
         previewColor: 'bg-orange-500',
-        category: 'Live Market'
+        category: 'Real-time'
     },
     {
         id: 'live_market',
-        title: 'Live Market Ticker',
+        title: 'Live Market (Legacy)',
         description: 'Live streaming prices and % changes for top crypto assets.',
         icon: <Activity size={20} />,
         previewColor: 'bg-green-600',
-        category: 'Live Market'
+        category: 'Real-time'
+    },
+    {
+        id: 'live_notifications',
+        title: 'Live Alerts',
+        description: 'Real-time trade and system notifications delivered via WebSocket.',
+        icon: <Bell size={20} />,
+        previewColor: 'bg-indigo-500',
+        category: 'Real-time'
     }
 ];
 
