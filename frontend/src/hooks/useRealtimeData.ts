@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { API_BASE_URL } from '../config/api';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+// Derive the backend base URL from the API URL (strip /api/v1)
+const getBackendBase = (): string => {
+  if (process.env.REACT_APP_BACKEND_URL) return process.env.REACT_APP_BACKEND_URL;
+  // Strip /api/v1 from API_BASE_URL to get the backend root
+  return API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+};
+
+const API_BASE = getBackendBase();
 
 interface PriceData {
   symbol: string;

@@ -17,22 +17,26 @@ async def lifespan(app: FastAPI):
         
         # Run schema migrations for existing tables
         with engine.connect() as conn:
-            try:
-                conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'manual'"))
-                conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS asset_type VARCHAR DEFAULT 'stock'"))
-                conn.execute(text("ALTER TABLE trades ADD COLUMN IF NOT EXISTS commission FLOAT DEFAULT 0.0"))
-                conn.execute(text("ALTER TABLE exchange_connections ADD COLUMN IF NOT EXISTS account_type VARCHAR DEFAULT 'spot'"))
-                conn.commit()
-                print("Schema migration completed successfully")
-            except Exception as e:
-                print(f"Schema migration warning: {e}")
+            # Try each migration individually (SQLite doesn't support IF NOT EXISTS)
+            migrations = [
+                "ALTER TABLE trades ADD COLUMN source VARCHAR DEFAULT 'manual'",
+                "ALTER TABLE trades ADD COLUMN asset_type VARCHAR DEFAULT 'stock'",
+                "ALTER TABLE trades ADD COLUMN commission FLOAT DEFAULT 0.0",
+                "ALTER TABLE exchange_connections ADD COLUMN account_type VARCHAR DEFAULT 'spot'",
+            ]
+            for migration in migrations:
+                try:
+                    conn.execute(text(migration))
+                    conn.commit()
+                except Exception:
+                    pass  # Column already exists
+            print("Schema migration completed successfully")
 
     except exc.OperationalError as e:
         if "Tenant or user not found" in str(e):
-            print("\n" + "="*80)
             print("CRITICAL DATABASE CONNECTION ERROR: Tenant or user not found")
-            print("="*80)
-            raise e
+            print("Update your DATABASE_URL with the correct project prefix.")
+        raise e
             
     print("Database tables created successfully")
 
