@@ -14,7 +14,6 @@ import CalendarWidget from './Widgets/CalendarWidget';
 import ProgressTrackerWidget from './Widgets/ProgressTrackerWidget';
 import ReportWidget from './Widgets/ReportWidget';
 import ExternalLinksWidget from './Widgets/ExternalLinksWidget';
-import LiveMarketWidget from './Widgets/LiveMarketWidget';
 import LiveMarketTicker from './Widgets/LiveMarketTicker';
 import LivePriceChart from './Widgets/LivePriceChart';
 import LiveNotifications from './Widgets/LiveNotifications';
@@ -77,7 +76,18 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
 
   const [activeWidgets, setActiveWidgets] = useState<WidgetType[]>(() => {
     const saved = localStorage.getItem('dashboard_widgets');
-    return saved ? JSON.parse(saved) : DEFAULT_WIDGETS;
+    if (saved) {
+      let parsed = JSON.parse(saved);
+      // Migration: remove legacy 'live_market' and ensure 'live_market_ticker' is present
+      if (parsed.includes('live_market')) {
+        parsed = parsed.filter((w: string) => w !== 'live_market');
+        if (!parsed.includes('live_market_ticker')) {
+          parsed.push('live_market_ticker');
+        }
+      }
+      return parsed;
+    }
+    return DEFAULT_WIDGETS;
   });
 
   // Save widgets to localStorage whenever they change
@@ -520,13 +530,7 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
                 );
 
               // --- Live Market (Legacy) ---
-              case 'live_market':
-                return (
-                  <LiveMarketWidget
-                    key={widgetId}
-                    onRemove={() => handleRemoveWidget(widgetId)}
-                  />
-                );
+
 
               // --- Streaks ---
               case 'current_streak_combined':

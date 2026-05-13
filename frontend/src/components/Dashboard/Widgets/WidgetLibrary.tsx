@@ -36,7 +36,6 @@ export type WidgetType =
     // Live Market / Real-time
     | 'live_market_ticker'
     | 'live_price_chart'
-    | 'live_market'
     | 'live_notifications';
 
 export interface WidgetDefinition {
