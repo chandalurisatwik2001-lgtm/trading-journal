@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Lenis from '@studio-freight/lenis';
+import Lenis from 'lenis';
 import Navbar from './Navbar';
 import Hero from './Hero';
 import BentoGrid from './BentoGrid';
