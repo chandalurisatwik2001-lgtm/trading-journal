@@ -54,7 +54,7 @@ const PerformanceChartWidget: React.FC<PerformanceChartWidgetProps> = ({ data, o
                         <Tooltip
                             contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '0.5rem' }}
                             itemStyle={{ color: '#fff' }}
-                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Cumulative P&L']}
+                            formatter={(value: any) => [`$${Number(value).toFixed(2)}`, 'Cumulative P&L']}
                         />
                         <Area
                             type="monotone"

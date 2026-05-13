@@ -25,7 +25,7 @@ const PnLGrowthChart: React.FC<PnLGrowthChartProps> = ({ data }) => {
                     <YAxis stroke="#9CA3AF" />
                     <Tooltip
                         contentStyle={{ backgroundColor: '#1F2937', borderColor: '#374151', color: '#F3F4F6' }}
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Cumulative P&L']}
+                        formatter={(value: any) => [`$${Number(value).toFixed(2)}`, 'Cumulative P&L']}
                         labelFormatter={(label) => new Date(label).toLocaleDateString()}
                     />
                     <Area

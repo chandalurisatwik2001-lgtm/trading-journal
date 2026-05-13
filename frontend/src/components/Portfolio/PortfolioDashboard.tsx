@@ -162,7 +162,7 @@ const PortfolioDashboard: React.FC = () => {
                                     <XAxis dataKey="date" stroke="#4b5563" fontSize={11} tickLine={false} axisLine={false} />
                                     <YAxis stroke="#4b5563" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => `$${v.toLocaleString()}`} />
                                     <Tooltip contentStyle={{ background: '#16161e', border: '1px solid #374151', borderRadius: 8, fontSize: 12 }}
-                                        formatter={(v: number) => [`$${v.toFixed(2)}`, 'Cumulative P&L']} />
+                                        formatter={(v: any) => [`$${Number(v).toFixed(2)}`, 'Cumulative P&L']} />
                                     <Area type="monotone" dataKey="cumPnl" stroke="#3b82f6" strokeWidth={2} fill="url(#pnlGrad)" />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -193,7 +193,7 @@ const PortfolioDashboard: React.FC = () => {
                                             ))}
                                         </Pie>
                                         <Tooltip contentStyle={{ background: '#16161e', border: '1px solid #374151', borderRadius: 8, fontSize: 12 }}
-                                            formatter={(v: number, name: string) => [`$${v.toFixed(2)}`, name]} />
+                                            formatter={(v: any, name: any) => [`$${Number(v).toFixed(2)}`, name]} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>

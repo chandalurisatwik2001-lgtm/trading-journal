@@ -94,7 +94,7 @@ const LivePriceChartWidget: React.FC<LivePriceChartWidgetProps> = ({ onRemove })
                 <Tooltip
                   contentStyle={{ background: '#1f2937', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 11 }}
                   labelStyle={{ color: '#9ca3af' }}
-                  formatter={(v: number) => [formatPrice(v), selectedCoin]}
+                  formatter={(v: any) => [formatPrice(Number(v)), selectedCoin]}
                 />
                 <Area type="monotone" dataKey="price" stroke={color} strokeWidth={2} fill="url(#lpcGrad)" dot={false} />
               </AreaChart>

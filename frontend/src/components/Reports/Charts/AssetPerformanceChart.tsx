@@ -18,7 +18,7 @@ const AssetPerformanceChart: React.FC<AssetPerformanceChartProps> = ({ data }) =
                     <Tooltip
                         cursor={{ fill: 'transparent' }}
                         contentStyle={{ backgroundColor: '#1F2937', borderColor: '#374151', color: '#F3F4F6' }}
-                        formatter={(value: number, name: string) => [
+                        formatter={(value: any, name: any) => [
                             name === 'pnl' ? `$${value.toFixed(2)}` : value,
                             name === 'pnl' ? 'Net P&L' : name
                         ]}
