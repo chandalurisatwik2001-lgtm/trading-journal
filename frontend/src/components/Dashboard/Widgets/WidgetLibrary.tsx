@@ -258,14 +258,6 @@ export const AVAILABLE_WIDGETS: WidgetDefinition[] = [
         category: 'Real-time'
     },
     {
-        id: 'live_market',
-        title: 'Live Market (Legacy)',
-        description: 'Live streaming prices and % changes for top crypto assets.',
-        icon: <Activity size={20} />,
-        previewColor: 'bg-green-600',
-        category: 'Real-time'
-    },
-    {
         id: 'live_notifications',
         title: 'Live Alerts',
         description: 'Real-time trade and system notifications delivered via WebSocket.',
