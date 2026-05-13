@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Globe, BookOpen, Youtube, Twitter, TrendingUp } from 'lucide-react';
+import { ExternalLink, Globe, BookOpen, Youtube, X, TrendingUp } from 'lucide-react';
 import WidgetContainer from './WidgetContainer';
 
 interface ExternalLinksWidgetProps {
@@ -11,7 +11,7 @@ const ExternalLinksWidget: React.FC<ExternalLinksWidgetProps> = ({ onRemove }) =
         { id: 1, title: 'TradingView', url: 'https://www.tradingview.com', icon: <TrendingUp size={20} />, color: 'bg-blue-500' },
         { id: 2, title: 'Forex Factory', url: 'https://www.forexfactory.com', icon: <Globe size={20} />, color: 'bg-orange-500' },
         { id: 3, title: 'Babypips', url: 'https://www.babypips.com', icon: <BookOpen size={20} />, color: 'bg-green-500' },
-        { id: 4, title: 'Market News', url: '#', icon: <Twitter size={20} />, color: 'bg-sky-500' },
+        { id: 4, title: 'Market News', url: '#', icon: <X size={20} />, color: 'bg-sky-500' },
         { id: 5, title: 'Daily Recap', url: '#', icon: <Youtube size={20} />, color: 'bg-red-500' },
         { id: 6, title: 'Broker Login', url: '#', icon: <ExternalLink size={20} />, color: 'bg-purple-500' },
     ];
