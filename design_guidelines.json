@@ -1,0 +1,113 @@
+{
+  "project_name": "Pulse Analytics Operations Center",
+  "domain": "Analytics / Dashboard",
+  "theme": "DARK",
+  "archetype": "Archetype 4 (Swiss & High-Contrast)",
+  "emotional_tone": "Authoritative, Precise, Tactical, Immediate",
+  "typography": {
+    "headings": {
+      "family": "Chivo",
+      "weights": ["400", "700", "900"],
+      "classes": "font-sans font-bold tracking-tight",
+      "instruction": "Never use Inter for headings. Use tight tracking for headers."
+    },
+    "body": {
+      "family": "IBM Plex Sans",
+      "weights": ["400", "500", "600"],
+      "classes": "font-sans leading-relaxed"
+    },
+    "data_metrics": {
+      "family": "JetBrains Mono",
+      "weights": ["400", "700"],
+      "classes": "font-mono tracking-tight",
+      "instruction": "Use monospace for all live numerical data, KPIs, and table metrics to ensure alignment and tech-forward feel."
+    }
+  },
+  "colors": {
+    "background": "#050505",
+    "surface": "#111111",
+    "surface_elevated": "#1A1A1A",
+    "border": "rgba(255, 255, 255, 0.12)",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#A0A0A0",
+    "text_muted": "#666666",
+    "primary": "#0033FF",
+    "accent_success": "#00FF66",
+    "accent_warning": "#E2F13C",
+    "accent_danger": "#FF3B30",
+    "interactive_hover": "#222222",
+    "instruction": "Strict monochrome structural base tinted slightly blue. Colors are used PURELY for data state (signal red for errors, electric green for active connections, yellow for warnings)."
+  },
+  "layout": {
+    "grid_strategy": "MODE B: THE CONTROL ROOM GRID",
+    "base_grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+    "gap": "gap-4 lg:gap-6",
+    "rules": [
+      "Every pixel must be utilized. Use h-full on children.",
+      "Density is key. No loose whitespace in the operations center.",
+      "Asymmetry is allowed in widget widths (col-span-2 vs col-span-1)."
+    ]
+  },
+  "surfaces": {
+    "style": "Grid Borders & Technical Look",
+    "card_classes": "bg-[#111111] border border-white/10 rounded-sm overflow-hidden",
+    "header_classes": "border-b border-white/10 bg-[#050505]/90 backdrop-blur-md sticky top-0 z-50",
+    "shadows": "none",
+    "instruction": "Avoid soft shadows. Use sharp 1px borders. Apply 'The Technical Look' where adjacent borders overlap perfectly."
+  },
+  "components": {
+    "kpi_cards": {
+      "layout": "col-span-1",
+      "padding": "p-5",
+      "content": "Top left label (uppercase, wide tracking), bottom left massive number (JetBrains Mono text-4xl), right side mini sparkline."
+    },
+    "charts": {
+      "library": "recharts",
+      "layout": "col-span-2 row-span-2",
+      "style": "Lines must be 2px thick. Area charts should use strong gradient fades to transparent bottom. Hide standard axis lines, use strictly dashed grid lines."
+    },
+    "activity_feed": {
+      "layout": "col-span-1 row-span-2",
+      "style": "Dense list. Timestamps in monospace. Colors map to event severity."
+    },
+    "data_table": {
+      "layout": "col-span-full",
+      "style": "Shadcn Table customized. border-collapse. Row hover is a stark background change, no soft fading."
+    },
+    "live_indicator": {
+      "style": "A pulsing 6px by 6px circle next to the 'LIVE' text in the header. Color: #00FF66."
+    }
+  },
+  "motion": {
+    "hover_states": "Crisp and instant. Background shifts slightly lighter, text brightens.",
+    "chart_animations": "Smooth linear transitions for data updates to simulate real-time stream.",
+    "page_transitions": "Minimalist fade. No heavy structural bouncing."
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "weight": "regular",
+    "size": "20px"
+  },
+  "images": {
+    "auth_background": {
+      "url": "https://images.unsplash.com/photo-1761078739436-ccee01f3d89c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHwyfHxkYXJrJTIwdGV4dHVyZSUyMGFic3RyYWN0fGVufDB8fHx8MTc3ODY2MTczMHww&ixlib=rb-4.1.0&q=85",
+      "description": "Dark, moody abstract background for the login page hero section. Use with a heavy black overlay (bg-black/60) to keep the login form crisp."
+    },
+    "brand_logo": {
+      "url": "https://images.unsplash.com/photo-1583058623568-cc203df63da1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHNoYXBlJTIwYmxhY2t8ZW58MHx8fHwxNzc4NjYxNzMwfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract geometric shape to be used as a logo placeholder in the sidebar or header."
+    }
+  },
+  "testing": {
+    "requirements": "All interactive and key informational elements MUST include a data-testid attribute in kebab-case."
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the color palette. Do not inject default Tailwind blue or slate.",
+    "Install the following fonts from Google Fonts: Chivo, IBM Plex Sans, JetBrains Mono.",
+    "Install @phosphor-icons/react and recharts.",
+    "Build a custom auth page utilizing the auth_background image with a heavy overlay.",
+    "Implement the 'Control Room Grid' for the main dashboard (tight gaps, fully stretched cards).",
+    "Make sure the WebSockets live status has a pulsing green dot.",
+    "Do NOT use Card wrappers from Shadcn without stripping their default rounded-xl and shadows. We want sharp corners (rounded-sm maximum) and 1px borders."
+  ]
+}
