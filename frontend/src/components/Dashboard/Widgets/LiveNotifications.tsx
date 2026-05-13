@@ -21,7 +21,7 @@ const levelColors: Record<string, string> = {
 };
 
 const LiveNotifications: React.FC<LiveNotificationsProps> = ({ onRemove }) => {
-  const { notifications, _status } = useRealtimeData();
+  const { notifications } = useRealtimeData();
 
   return (
     <div
