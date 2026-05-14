@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
-import requests as req_lib
+import httpx
 from datetime import datetime
 
 from app.api.v1.endpoints.auth import get_current_user
@@ -19,11 +19,12 @@ from app.models.sim_position import SimPosition
 
 router = APIRouter()
 
-def get_live_price(symbol: str) -> float:
+async def get_live_price(symbol: str) -> float:
     try:
-        resp = req_lib.get(f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}", timeout=5)
-        resp.raise_for_status()
-        return float(resp.json()["price"])
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}", timeout=5)
+            resp.raise_for_status()
+            return float(resp.json()["price"])
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Cannot fetch live price for {symbol}: {e}")
 
@@ -108,17 +109,19 @@ def reset_wallet(db: Session = Depends(get_db), current_user: User = Depends(get
 
 # Spot
 @router.post("/order/spot")
-def place_spot_order(order: SpotOrderRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def place_spot_order(order: SpotOrderRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not order.symbol.endswith("USDT"):
         raise HTTPException(400, "Only USDT pairs supported")
     if order.quantity <= 0:
         raise HTTPException(400, "Quantity must be > 0")
 
     base_asset = order.symbol[:-4]
-    price = get_live_price(order.symbol)
+    price = await get_live_price(order.symbol)
     total_cost = round(price * order.quantity, 4)
     usdt_wallet = get_or_create_wallet(db, current_user.id, "USDT")
     base_wallet = get_or_create_wallet(db, current_user.id, base_asset)
+
+    from app.websocket import manager
 
     if order.side.upper() == "BUY":
         if usdt_wallet.balance < total_cost:
@@ -131,6 +134,19 @@ def place_spot_order(order: SpotOrderRequest, db: Session = Depends(get_db), cur
                         notes=f"Sim spot BUY {order.quantity} {base_asset} @ ${price:,.2f}")
         db.add(journal)
         db.commit()
+        
+        # Broadcast update
+        await manager.send_personal_message({
+            "type": "trade_update",
+            "data": {
+                "message": f"Bought {order.quantity} {base_asset} @ ${price:,.2f}",
+                "symbol": order.symbol,
+                "side": "BUY",
+                "quantity": order.quantity,
+                "price": price
+            }
+        }, current_user.email)
+        
         return {"message": f"Bought {order.quantity} {base_asset} @ ${price:,.2f}", "symbol": order.symbol,
                 "side": "BUY", "quantity": order.quantity, "price": price, "total": total_cost, "trade_id": journal.id}
 
@@ -152,6 +168,20 @@ def place_spot_order(order: SpotOrderRequest, db: Session = Depends(get_db), cur
             t.status = TradeStatus.CLOSED; t.pnl = round((price - t.entry_price) * close_qty, 4)
             remaining -= close_qty
         db.commit()
+        
+        # Broadcast update
+        await manager.send_personal_message({
+            "type": "trade_update",
+            "data": {
+                "message": f"Sold {order.quantity} {base_asset} @ ${price:,.2f} | PnL: ${pnl:+.2f}",
+                "symbol": order.symbol,
+                "side": "SELL",
+                "quantity": order.quantity,
+                "price": price,
+                "pnl": pnl
+            }
+        }, current_user.email)
+        
         return {"message": f"Sold {order.quantity} {base_asset} @ ${price:,.2f} | PnL: ${pnl:+.2f}",
                 "symbol": order.symbol, "side": "SELL", "quantity": order.quantity, "price": price, "total": total_cost, "pnl": pnl}
     else:
@@ -159,7 +189,7 @@ def place_spot_order(order: SpotOrderRequest, db: Session = Depends(get_db), cur
 
 # Futures
 @router.post("/order/futures")
-def place_futures_order(order: FuturesOrderRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def place_futures_order(order: FuturesOrderRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not order.symbol.endswith("USDT"):
         raise HTTPException(400, "Only USDT-margined futures supported")
     if order.quantity <= 0:
@@ -171,7 +201,7 @@ def place_futures_order(order: FuturesOrderRequest, db: Session = Depends(get_db
         raise HTTPException(400, "Side must be LONG or SHORT")
 
     base_asset = order.symbol[:-4]
-    price = get_live_price(order.symbol)
+    price = await get_live_price(order.symbol)
     notional = price * order.quantity
     margin = round(notional / order.leverage, 4)
     liq_price = calc_liquidation_price(side, price, order.leverage)
@@ -199,19 +229,33 @@ def place_futures_order(order: FuturesOrderRequest, db: Session = Depends(get_db
                            status="OPEN", journal_trade_id=journal.id)
     db.add(position)
     db.commit()
+
+    from app.websocket import manager
+    await manager.send_personal_message({
+        "type": "trade_update",
+        "data": {
+            "message": f"Opened {side} {order.quantity} {base_asset} @ ${price:,.2f} ({order.leverage}x)",
+            "symbol": order.symbol,
+            "side": side,
+            "quantity": order.quantity,
+            "price": price,
+            "leverage": order.leverage
+        }
+    }, current_user.email)
+
     return {"message": f"Opened {side} {order.quantity} {base_asset} @ ${price:,.2f} ({order.leverage}x)",
             "position_id": position.id, "journal_trade_id": journal.id, "symbol": order.symbol, "side": side,
             "quantity": order.quantity, "entry_price": price, "leverage": order.leverage,
             "margin_used": margin, "notional_value": notional, "liquidation_price": liq_price}
 
 @router.post("/position/close")
-def close_position(req: ClosePositionRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def close_position(req: ClosePositionRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     position = db.query(SimPosition).filter(SimPosition.id == req.position_id,
         SimPosition.user_id == current_user.id, SimPosition.status == "OPEN").first()
     if not position:
         raise HTTPException(404, "Open position not found")
 
-    exit_price = get_live_price(position.symbol)
+    exit_price = await get_live_price(position.symbol)
     pnl = ((exit_price - position.entry_price) if position.side == "LONG" else (position.entry_price - exit_price)) * position.quantity
     pnl = round(pnl, 4)
     returned = round(position.margin_used + pnl, 4)
@@ -228,6 +272,19 @@ def close_position(req: ClosePositionRequest, db: Session = Depends(get_db), cur
             jt.status = TradeStatus.CLOSED; jt.pnl = pnl
 
     db.commit()
+
+    from app.websocket import manager
+    await manager.send_personal_message({
+        "type": "trade_update",
+        "data": {
+            "message": f"Closed {position.side} {position.quantity} {position.base_asset} @ ${exit_price:,.2f} | PnL: ${pnl:+.2f}",
+            "symbol": position.symbol,
+            "side": position.side,
+            "quantity": position.quantity,
+            "price": exit_price,
+            "pnl": pnl
+        }
+    }, current_user.email)
     return {"message": f"Closed {position.side} {position.quantity} {position.base_asset} @ ${exit_price:,.2f}",
             "pnl": pnl, "returned_to_wallet": returned, "entry_price": position.entry_price,
             "exit_price": exit_price, "leverage": position.leverage}

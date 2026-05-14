@@ -54,7 +54,8 @@ export function useRealtimeData() {
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    const wsUrl = API_BASE.replace(/^http/, 'ws') + '/api/v1/ws/prices';
+    const token = localStorage.getItem('token');
+    const wsUrl = API_BASE.replace(/^http/, 'ws') + `/api/v1/ws/prices${token ? `?token=${token}` : ''}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
     setStatus('connecting');

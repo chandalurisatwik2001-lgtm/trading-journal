@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { portfolioAPI } from '../../api/portfolio';
 import { simExchangeAPI, WalletBalance } from '../../api/simExchange';
 import { analyticsAPI } from '../../api/analytics';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Wallet, TrendingUp, TrendingDown, RefreshCw, RotateCcw, Activity, BarChart2 } from 'lucide-react';
+import { useRealtimeData } from '../../hooks/useRealtimeData';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316'];
 
@@ -37,6 +38,9 @@ const PortfolioDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [resetting, setResetting] = useState(false);
 
+    const { prices: wsPrices } = useRealtimeData();
+    const prevPricesRef = useRef<Record<string, number>>({});
+
     const load = useCallback(async () => {
         setLoading(true);
         try {
@@ -49,7 +53,7 @@ const PortfolioDashboard: React.FC = () => {
             setWallets(w);
             setPnlData(Array.isArray(pnl) ? pnl : []);
 
-            // Fetch live prices for non-USDT assets
+            // Fetch live prices for non-USDT assets as fallback
             const nonUsdt = w.filter(wallet => wallet.asset !== 'USDT' && wallet.balance > 0);
             if (nonUsdt.length > 0) {
                 const prices: Record<string, number> = {};
@@ -78,9 +82,11 @@ const PortfolioDashboard: React.FC = () => {
         finally { setResetting(false); }
     };
 
-    // Compute portfolio values
+    // Compute portfolio values with live price stream
     const holdingsData = wallets.map(w => {
-        const usdValue = w.asset === 'USDT' ? w.balance : (livePrices[w.asset] ?? 0) * w.balance;
+        const wsPrice = wsPrices.find(p => p.symbol === w.asset)?.price;
+        const price = wsPrice ?? livePrices[w.asset] ?? 0;
+        const usdValue = w.asset === 'USDT' ? w.balance : price * w.balance;
         return { asset: w.asset, balance: w.balance, usdValue };
     }).filter(h => h.usdValue > 0.01);
 
@@ -262,6 +268,69 @@ const PortfolioDashboard: React.FC = () => {
                                                     </div>
                                                     <span className="font-mono text-xs text-gray-400 w-10 text-right">{alloc.toFixed(1)}%</span>
                                                 </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Open Positions */}
+            <div className="bg-[#1e1e24] rounded-xl border border-gray-800 p-5 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-bold text-white">Open Positions</h3>
+                    <span className="text-xs text-gray-500">Live P&L calculations</span>
+                </div>
+                {!summary?.sim?.open_positions || summary.sim.open_positions.length === 0 ? (
+                    <div className="text-gray-600 text-sm text-center py-8">No open positions</div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gray-800 text-xs text-gray-500">
+                                    <th className="text-left py-2 px-3">Symbol</th>
+                                    <th className="text-left py-2 px-3">Side</th>
+                                    <th className="text-right py-2 px-3">Size</th>
+                                    <th className="text-right py-2 px-3">Entry Price</th>
+                                    <th className="text-right py-2 px-3">Mark Price</th>
+                                    <th className="text-right py-2 px-3">Unrealized PnL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {summary.sim.open_positions.map(p => {
+                                    const baseAsset = p.symbol.replace('USDT', '').replace(' PERP', '').replace('/', '');
+                                    const wsPrice = wsPrices.find(pr => pr.symbol === baseAsset)?.price;
+                                    const markPrice = wsPrice ?? p.entry_price;
+                                    
+                                    const prevPrice = prevPricesRef.current[baseAsset] ?? markPrice;
+                                    const direction = markPrice > prevPrice ? 'up' : markPrice < prevPrice ? 'down' : 'same';
+                                    prevPricesRef.current[baseAsset] = markPrice;
+
+                                    const pnl = p.side === 'LONG' 
+                                        ? (markPrice - p.entry_price) * p.quantity 
+                                        : (p.entry_price - markPrice) * p.quantity;
+                                    const pnlPercentage = (pnl / (p.entry_price * p.quantity)) * 100 * (p.leverage || 1);
+
+                                    return (
+                                        <tr key={p.id} className="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors">
+                                            <td className="py-3 px-3">
+                                                <span className="font-medium text-gray-200">{p.symbol}</span>
+                                            </td>
+                                            <td className="py-3 px-3">
+                                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${p.side === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                                    {p.side}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-3 text-right font-mono text-gray-200">{p.quantity}</td>
+                                            <td className="py-3 px-3 text-right font-mono text-gray-400">${p.entry_price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                                            <td key={markPrice} className={`py-3 px-3 text-right font-mono text-white ${direction === 'up' ? 'flash-up' : direction === 'down' ? 'flash-down' : ''}`}>
+                                                ${markPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                                            </td>
+                                            <td className={`py-3 px-3 text-right font-mono font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} ({pnlPercentage >= 0 ? '+' : ''}{pnlPercentage.toFixed(1)}%)
                                             </td>
                                         </tr>
                                     );

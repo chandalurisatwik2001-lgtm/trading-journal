@@ -32,6 +32,7 @@ const Header: React.FC<HeaderProps> = ({ wsStatus }) => {
             <Activity size={18} className="text-white" />
           </div>
           <span className="font-heading text-lg font-bold tracking-tight">PULSE</span>
+          <span className="text-xs text-[#A0A0A0] ml-2 hidden lg:inline">| Trade with Precision. Execute with Power.</span>
         </div>
         <div className="h-5 w-px bg-white/10" />
         <div className="flex items-center gap-2" data-testid="ws-status-indicator">

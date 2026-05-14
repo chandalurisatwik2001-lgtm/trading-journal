@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap');
+
 /* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
@@ -6,11 +8,13 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0B0C10;
+  color: #C5C6C7;
 }
 
 @layer utilities {
@@ -20,15 +24,32 @@ body {
   }
 
   .glass-panel {
-    @apply bg-gray-900/60 backdrop-blur-xl border border-white/5 shadow-xl;
+    @apply bg-[#1F2833]/40 backdrop-blur-xl border border-white/[0.02] shadow-2xl;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
   }
 
   .glass-panel-hover {
-    @apply hover:bg-gray-800/60 hover:border-white/10 transition-all duration-300;
+    @apply hover:bg-[#1F2833]/60 hover:border-white/[0.05] transition-all duration-500 ease-out;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-[#66FCF1] to-[#45A29E];
+  }
+
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-[#FFE000] to-[#799F0C];
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(102, 252, 241, 0.2);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
   }
 }
 
@@ -48,4 +69,22 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-700;
+}
+
+@keyframes flash-green {
+  from { background-color: rgba(16, 185, 129, 0.2); }
+  to { background-color: transparent; }
+}
+
+@keyframes flash-red {
+  from { background-color: rgba(239, 68, 68, 0.2); }
+  to { background-color: transparent; }
+}
+
+.flash-up {
+  animation: flash-green 1s ease-out;
+}
+
+.flash-down {
+  animation: flash-red 1s ease-out;
 }

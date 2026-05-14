@@ -85,8 +85,18 @@ async def health():
 
 # ─── WebSocket Endpoint ───
 @app.websocket("/api/v1/ws/prices")
-async def websocket_prices(websocket: WebSocket):
-    await manager.connect(websocket)
+async def websocket_prices(websocket: WebSocket, token: str = None):
+    user_identifier = None
+    if token:
+        try:
+            from jose import jwt
+            from app.core.config import settings
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            user_identifier = payload.get("sub")
+        except Exception:
+            pass
+            
+    await manager.connect(websocket, user_identifier)
     try:
         # Send initial snapshot
         await websocket.send_json(get_initial_data())
@@ -95,9 +105,9 @@ async def websocket_prices(websocket: WebSocket):
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, user_identifier)
     except Exception:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, user_identifier)
 
 
 # ─── Live Price REST endpoints (fallback for non-WS clients) ───

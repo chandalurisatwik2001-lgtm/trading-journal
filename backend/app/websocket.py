@@ -16,22 +16,50 @@ from fastapi import WebSocket, WebSocketDisconnect
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self.user_connections: Dict[int, Set[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, user_id: str = None):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        if user_id:
+            if user_id not in self.user_connections:
+                self.user_connections[user_id] = set()
+            self.user_connections[user_id].add(websocket)
+        else:
+            self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket, user_id: str = None):
+        if user_id and user_id in self.user_connections:
+            self.user_connections[user_id].discard(websocket)
+            if not self.user_connections[user_id]:
+                del self.user_connections[user_id]
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
+    async def send_personal_message(self, message: dict, user_id: str):
+        if user_id in self.user_connections:
+            for connection in self.user_connections[user_id]:
+                try:
+                    await connection.send_json(message)
+                except Exception:
+                    pass
+
     async def broadcast(self, message: dict):
         disconnected = []
+        # Broadcast to global connections
         for conn in self.active_connections:
             try:
                 await conn.send_json(message)
             except Exception:
                 disconnected.append(conn)
+        
+        # Broadcast to user-specific connections
+        for user_id, connections in self.user_connections.items():
+            for conn in connections:
+                try:
+                    await conn.send_json(message)
+                except Exception:
+                    pass
+                    
         for conn in disconnected:
             self.disconnect(conn)
 
