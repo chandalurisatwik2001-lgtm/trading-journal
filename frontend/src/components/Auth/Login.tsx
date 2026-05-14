@@ -470,12 +470,15 @@ const Login: React.FC = () => {
   );
 };
 
+// Warn once at module load time (not on every render)
+const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+if (!googleClientId) {
+  console.warn('REACT_APP_GOOGLE_CLIENT_ID not set - Google OAuth will not work');
+}
+
 // Wrap with GoogleOAuthProvider
 const LoginWithGoogle = () => {
-  const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
-
   if (!googleClientId) {
-    console.warn('REACT_APP_GOOGLE_CLIENT_ID not set - Google OAuth will not work');
     return <Login />;
   }
 
