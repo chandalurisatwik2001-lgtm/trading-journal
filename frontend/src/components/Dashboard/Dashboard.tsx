@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { API_BASE_URL } from '../../config/api';
 import WidgetLibrary, { WidgetType } from './Widgets/WidgetLibrary';
 import AccountBalanceWidget from './Widgets/AccountBalanceWidget';
@@ -14,11 +14,13 @@ import CalendarWidget from './Widgets/CalendarWidget';
 import ProgressTrackerWidget from './Widgets/ProgressTrackerWidget';
 import ReportWidget from './Widgets/ReportWidget';
 import ExternalLinksWidget from './Widgets/ExternalLinksWidget';
-import LiveMarketTicker from './Widgets/LiveMarketTicker';
-import LivePriceChart from './Widgets/LivePriceChart';
-import LiveNotifications from './Widgets/LiveNotifications';
 import { DollarSign, TrendingUp, BarChart2, Activity } from 'lucide-react';
 import { exchangesAPI } from '../../api/exchanges';
+
+// Lazy-load live market widgets so WebSocket connections don't start on login
+const LiveMarketTicker = React.lazy(() => import('./Widgets/LiveMarketTicker'));
+const LivePriceChart = React.lazy(() => import('./Widgets/LivePriceChart'));
+const LiveNotifications = React.lazy(() => import('./Widgets/LiveNotifications'));
 
 interface DashboardProps {
   showLibrary?: boolean;
@@ -546,24 +548,30 @@ const Dashboard: React.FC<DashboardProps> = ({ showLibrary = false, setShowLibra
               // --- Real-time Widgets ---
               case 'live_market_ticker':
                 return (
-                  <LiveMarketTicker
-                    key={widgetId}
-                    onRemove={() => handleRemoveWidget(widgetId)}
-                  />
+                  <Suspense fallback={<div className="p-4 text-gray-500 text-sm">Loading...</div>}>
+                    <LiveMarketTicker
+                      key={widgetId}
+                      onRemove={() => handleRemoveWidget(widgetId)}
+                    />
+                  </Suspense>
                 );
               case 'live_price_chart':
                 return (
-                  <LivePriceChart
-                    key={widgetId}
-                    onRemove={() => handleRemoveWidget(widgetId)}
-                  />
+                  <Suspense fallback={<div className="p-4 text-gray-500 text-sm">Loading...</div>}>
+                    <LivePriceChart
+                      key={widgetId}
+                      onRemove={() => handleRemoveWidget(widgetId)}
+                    />
+                  </Suspense>
                 );
               case 'live_notifications':
                 return (
-                  <LiveNotifications
-                    key={widgetId}
-                    onRemove={() => handleRemoveWidget(widgetId)}
-                  />
+                  <Suspense fallback={<div className="p-4 text-gray-500 text-sm">Loading...</div>}>
+                    <LiveNotifications
+                      key={widgetId}
+                      onRemove={() => handleRemoveWidget(widgetId)}
+                    />
+                  </Suspense>
                 );
 
               // Fallback
