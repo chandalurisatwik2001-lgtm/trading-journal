@@ -22,7 +22,8 @@ const PortfolioDashboard = React.lazy(() => import('./components/Portfolio/Portf
 
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <div className="flex h-screen items-center justify-center bg-gray-950"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500" /></div>;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
@@ -68,7 +69,11 @@ const AppLayout = () => {
 };
 
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center bg-gray-950"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500" /></div>;
+  }
 
   return (
     <Routes>

@@ -21,7 +21,7 @@ const Login: React.FC = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const formRef = useRef<HTMLDivElement>(null);
   const lockIconRef = useRef<SVGSVGElement>(null);
   const lockContainerRef = useRef<HTMLDivElement>(null);
@@ -36,11 +36,11 @@ const Login: React.FC = () => {
     if (params.get('expired') === 'true') {
       setSessionExpired(true);
     }
-    // Check if already logged in
-    if (localStorage.getItem('token')) {
+    // Only redirect if already authenticated (auth state is loaded)
+    if (isAuthenticated) {
       navigate('/dashboard');
     }
-  }, [navigate, location.search]);
+  }, [navigate, location.search, isAuthenticated]);
 
   useEffect(() => {
     // Entry Animation

@@ -16,6 +16,7 @@ interface AuthContextType {
   signup: (email: string, username: string, password: string, fullName?: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +44,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     try {
@@ -58,6 +60,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Error loading user from storage:', error);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -146,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
