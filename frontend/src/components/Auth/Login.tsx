@@ -476,14 +476,14 @@ if (!googleClientId) {
   console.warn('REACT_APP_GOOGLE_CLIENT_ID not set - Google OAuth will not work');
 }
 
-// Wrap with GoogleOAuthProvider
+// Wrap with GoogleOAuthProvider to prevent fatal crashes
 const LoginWithGoogle = () => {
-  if (!googleClientId) {
-    return <Login />;
-  }
+  // If the client ID is missing in Vercel, we still MUST wrap the app in the Provider,
+  // otherwise hooks like useGoogleLogin inside <Login /> will throw fatal runtime errors.
+  const clientId = googleClientId || 'dummy_client_id_to_prevent_crash';
 
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
+    <GoogleOAuthProvider clientId={clientId}>
       <Login />
     </GoogleOAuthProvider>
   );
